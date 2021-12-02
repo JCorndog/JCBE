@@ -14,3 +14,8 @@
 10. Budget
     - No expenses to date
 11. [Appendix](Appendix.md)
+
+
+
+**Note:** Combined report [Here](CSSeniorDesignFinalReport%20-%20Google%20Docs.pdf)
+
