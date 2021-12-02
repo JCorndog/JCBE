@@ -11,7 +11,7 @@
 9. Professional Biographies
    - [Ben Elfner](writing_assignments/assignment2/Professional%20Biography%20BE.md)
    - [Jack Cordonnier](writing_assignments/assignment2/Professional%20Biography%20JNC.md)
-10. [Budget](Senior_Design_Budget.md
+10. [Budget](Senior_Design_Budget.md)
 11. [Appendix](Appendix.md)
 
 
