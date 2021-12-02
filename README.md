@@ -2,7 +2,7 @@
 2. [Project Description](Project-Description.md)
 3. [User Stories](User_Stories.md) and [Design Diagrams](Design_Diagrams/DesignDiagrams.md)
 4. [Task List](Tasklist.md)
-5. (Milestones)[MilestonesTimelineandEffortMatrix.md#table-0-milestones]
+5. [Milestones](MilestonesTimelineandEffortMatrix.md#table-0-milestones)
 6. [Timeline](MilestonesTimelineandEffortMatrix.md#table-1-timeline)
 7. [Effort Matrix](MilestonesTimelineandEffortMatrix.md#table-2-effort-matrix)
 8. Self-Assessment Essays
