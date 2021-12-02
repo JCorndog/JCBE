@@ -1,4 +1,4 @@
-#Abstract
+# Abstract
 Our project is focused on developing a game of tag as a 2D platformer with specialized chaser and evader AI. 
 The chaser AI(s) will work together to catch the evader. 
 The game simulation will be written in a language conducive to quickly teach the AI through iterative learning. 
