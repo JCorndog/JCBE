@@ -1,17 +1,16 @@
 1. [Team names](team_names.md) and [Abstract](abstract.md)
 2. [Project Description](Project-Description.md)
 3. [User Stories](User_Stories.md) and [Design Diagrams](Design_Diagrams/DesignDiagrams.md)
-4. Project Tasks and Timeline
-   - Task List
-   - Timeline
-   - Effort Matrix
-5. ABET Concerns Essay (optional)
-6. PPT Slideshow (includes ABET Concerns)
-7. Self-Assessment Essays
-8. Professional Biographies
-9. Budget
-   - expenses to date or statement that there have not been any.
-   - show monetary value of donated items and donation sources.
-10. Appendix
-    - include appropriate references, citations, links to code repositories, and meeting notes.
-    - there should be evidence justifying 45 hours of effort for each team member.
+4. [Task List](Tasklist.md)
+5. (Milestones)[MilestonesTimelineandEffortMatrix.md#table-0-milestones]
+6. [Timeline](MilestonesTimelineandEffortMatrix.md#table-1-timeline)
+7. [Effort Matrix](MilestonesTimelineandEffortMatrix.md#table-2-effort-matrix)
+8. Self-Assessment Essays
+   - [Ben Elfner](writing_assignments/assignment3/BenElfnerIndividualCapstoneAssessment.md)
+   - [Jack Cordonnier](writing_assignments/assignment3/Individual%20Capstone%20Assessment.docx)
+9. Professional Biographies
+   - [Ben Elfner](writing_assignments/assignment2/Professional%20Biography%20BE.md)
+   - [Jack Cordonnier](writing_assignments/assignment2/Professional%20Biography%20JNC.md)
+10. Budget
+    - No expenses to date
+11. [Appendix](Appendix.md)
