@@ -13,4 +13,4 @@
 * Train the agents - {Ben}
 * Establish the Game's rules set and objectives of the agents/players - {Jack}
 
-**Bold** indicates teammate with primary responsibility 
+**Bold** indicates teammate with primary responsibility. 
