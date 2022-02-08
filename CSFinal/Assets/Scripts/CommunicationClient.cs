@@ -9,7 +9,7 @@ public class CommunicationClient : MonoBehaviour
 
     public void InitializeServer()
     {
-        messageHandler = new messageHandler();
+        messageHandler = new MessageHandler();
         messageHandler.Start();
     }
 
