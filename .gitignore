@@ -5,3 +5,4 @@
 /CSFinal/.vsconfig
 /CSFinal/*.csproj
 .idea
+/CSFinal/Logs/shadercompiler-UnityShaderCompiler.exe*
