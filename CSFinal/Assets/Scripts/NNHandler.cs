@@ -71,8 +71,8 @@ public class NNHandler : MonoBehaviour
         client.SendData(byteArray, output =>
         {
             Debug.Log("Received");
-            watch.Stop();
-            Debug.Log(watch.ElapsedMilliseconds);
+//            watch.Stop();
+//            Debug.Log(watch.ElapsedMilliseconds);
         }, error =>
         {
             // TODO: when i am not lazy
