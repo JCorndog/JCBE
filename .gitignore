@@ -6,3 +6,4 @@
 /CSFinal/*.csproj
 .idea
 /CSFinal/Logs/shadercompiler-UnityShaderCompiler.exe*
+/CSFinal/Temp
