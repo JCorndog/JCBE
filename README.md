@@ -14,7 +14,7 @@
 10. [Budget](SeniorDesignBudget.md)
 11. [Appendix](Appendix.md)
 
-
+12. [Docs](docs/index.md)
 
 **Note:** Combined report [Here](CSSeniorDesignFinalReport%20-%20Google%20Docs.pdf)
 
