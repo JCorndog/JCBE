@@ -2,7 +2,6 @@
 
 [Home](../README.md)
 
-1. Introduction
-2. Controls
-3. Parameters
-4. Level Selection
+1. [Introduction](introduction.md)
+2. [Getting Started](getting_started.md)
+
