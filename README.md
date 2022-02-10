@@ -1,4 +1,4 @@
-# AI Tag
+# tag.AI
 
 1. [Team names](Project-Description.md) and [Abstract](abstract.md)
 2. [Project Description](Project-Description.md)
