@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class Instructions : MonoBehaviour
+public class Level : MonoBehaviour
 {
+    public int level;
     // Start is called before the first frame update
     void Start()
     {
@@ -16,8 +17,11 @@ public class Instructions : MonoBehaviour
     {
         
     }
-    public void Back()
+    public void gotoLevel()
     {
-        SceneManager.LoadScene(sceneName: "Main Menu");
+        string levelName = "Level" + level.ToString();
+        Debug.Log(levelName);
+        SceneManager.LoadScene(sceneName: levelName);
+        SceneManager.UnloadSceneAsync(sceneName: "LevelSelect");
     }
 }
