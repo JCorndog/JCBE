@@ -31,17 +31,17 @@ public class PlayerMovement : MonoBehaviour
     {
         xDir = 0;
         //Input
-        if (Input.GetKey(KeyCode.A))
+        if (Input.GetKey(KeyCode.LeftArrow))
         {
             xDir -= 1;
             sprRend.flipX = true;
         }
-        if (Input.GetKey(KeyCode.D))
+        if (Input.GetKey(KeyCode.RightArrow))
         {
             xDir += 1;
             sprRend.flipX = false;
         }
-        if (Input.GetKeyDown(KeyCode.W) && grounded)
+        if (Input.GetKeyDown(KeyCode.UpArrow) && grounded)
         {
             Debug.Log("jump");
             jumped = true;

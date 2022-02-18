@@ -19,12 +19,14 @@ public class MainMenu : MonoBehaviour
 
     public void PlayGame() 
     {
-        SceneManager.LoadScene(sceneName:"Level1");
+        SceneManager.LoadScene(sceneName:"LevelSelect");
+        SceneManager.UnloadSceneAsync(sceneName: "Main Menu");
     }
 
     public void gotoInstructions()
     {
         SceneManager.LoadScene(sceneName:"Instructions");
+        SceneManager.UnloadSceneAsync(sceneName: "Main Menu");
     }
 
     public void QuitGame()
