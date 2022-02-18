@@ -38,7 +38,6 @@ class MessageHandler(threading.Thread):
             print('Message received')
         self.modify_incoming_lock.release()
 
-
     def _send_message(self) -> None:
         self.outgoing_message_ready_lock.acquire()
         self.outgoing_message_ready_lock.release()
@@ -80,8 +79,9 @@ class Communicator:
 
     def get_image(self):
         message = self.get_data()
-        dims = int.from_bytes(message[:4], 'little'), int.from_bytes(message[4:8], 'little'), 3
-        array_received = np.frombuffer(message[8:], dtype=np.float32)
+        touch = int.from_bytes(message[:4], 'little')
+        dims = int.from_bytes(message[4:8], 'little'), int.from_bytes(message[8:12], 'little'), 3
+        array_received = np.frombuffer(message[12:], dtype=np.float32)
         array_received = array_received.reshape(dims)
         array_received = np.rot90(array_received)
         return array_received

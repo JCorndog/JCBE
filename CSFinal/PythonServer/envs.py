@@ -1,5 +1,5 @@
 import random
-
+import numpy as np
 from messagehandler import Communicator
 
 
@@ -19,18 +19,28 @@ class Space():
 class GameEnv():
     def __init__(self):
         self.action_space = Space()
-        self.communicator = Communicator
+        self.communicator = Communicator()
+
+    def decode_data(self, message):
+        touch = int.from_bytes(message[:4], 'little')
+        dims = int.from_bytes(message[4:8], 'little'), int.from_bytes(message[8:12], 'little'), 3
+        array_received = np.frombuffer(message[12:], dtype=np.float32)
+        array_received = array_received.reshape(dims)
+        array_received = np.rot90(array_received)
+        return array_received, touch
 
     def step(self, action):
         err_msg = "%r (%s) invalid action" % (action, type(action))
         assert self.action_space.contains(action), err_msg
         print(self.encode_action(action))
+
+        observation, reward = self.decode_data(self.communicator.get_data())
+
         # self.communicator.send_data(self.encode_action(action))
         # incomming_msg = self.communicator.get_data()
-
-        observation = [1]
-        reward = 1
         done = False
+        if reward == 1:
+            done = True
 
         return observation, reward, done, {}
 
@@ -62,4 +72,4 @@ class Processor:
 
 if __name__ == '__main__':
     g = GameEnv()
-    print(g.step((0,0,1)))
+    print(g.step((0, 0, 1)))
