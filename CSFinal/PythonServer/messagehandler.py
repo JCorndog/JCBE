@@ -76,6 +76,14 @@ class Communicator:
     def get_data(self) -> bytes:
         return self.message_handler.get_message()
 
+    def get_image(self):
+        message = self.get_data()
+        dims = int.from_bytes(message[:4], 'little'), int.from_bytes(message[4:8], 'little'), 3
+        array_received = np.frombuffer(message[8:], dtype=np.float32)
+        array_received = array_received.reshape(dims)
+        array_received = np.rot90(array_received)
+        return array_received
+
     def send_data(self, data) -> None:
         self.message_handler.send_message(data)
 
