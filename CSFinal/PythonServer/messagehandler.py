@@ -14,53 +14,67 @@ class MessageHandler(threading.Thread):
         self.incoming_message = None
         self.outgoing_message = None
         self.outgoing_message_ready_lock = threading.Lock()
-        self.outgoing_message_ready_lock.acquire()
+        self.modify_incoming_lock = threading.Lock()
         self.incoming_message_ready_lock = threading.Lock()
         self.incoming_message_ready_lock.acquire()
 
     def run(self):
         first_message = True
         while True:
-            self.receive_message()
-            self._send_message()
+            self._receive_message()
+            if self.outgoing_message:
+                self._send_message()
 
-    def receive_message(self):
-        self.incoming_message = self.socket.recv()
-        self.incoming_message_ready_lock.release()
-        if self.verbose:
-            print('Message received')
+    def _receive_message(self):
+        try:
+            self.modify_incoming_lock.acquire()
+            self.incoming_message = self.socket.recv(zmq.NOBLOCK)
+
+            if self.verbose:
+                print('Message received')
+        except zmq.ZMQError:
+            pass
+        finally:
+            if self.incoming_message_ready_lock.locked():
+                self.incoming_message_ready_lock.release()
+            self.modify_incoming_lock.release()
+
 
     def _send_message(self) -> None:
         self.outgoing_message_ready_lock.acquire()
-        self.socket.send(bytes_to_send)
+        self.socket.send(bytes_to_send, flags=zmq.NOBLOCK)
+        self.outgoing_message_ready_lock.release()
+        self.outgoing_message = None
         if self.verbose:
             print('Message sent')
 
     def get_message(self):
-        self.incoming_message_ready_lock.acquire()
-        return self.incoming_message
+        self.modify_incoming_lock.acquire()
+        if self.incoming_message_ready_lock.locked():
+            self.incoming_message_ready_lock.acquire()
+
+        msg = self.incoming_message
+        self.incoming_message = None
+        self.modify_incoming_lock.release()
+
+        if self.incoming_message_ready_lock.locked():
+            self.incoming_message_ready_lock.release()
+        return msg
 
     def send_message(self, data):
+        self.outgoing_message_ready_lock.acquire()
         self.outgoing_message = data
         self.outgoing_message_ready_lock.release()
 
 
 class Communicator:
-    def __init__(self):
-        self.message_handler = MessageHandler()
+    def __init__(self, verbose=False):
+        self.message_handler = MessageHandler(verbose=verbose)
         self.message_handler.daemon = True
         self.message_handler.start()
 
     def get_data(self) -> bytes:
         return self.message_handler.get_message()
-
-    def get_image(self):
-        message = self.get_data()
-        dims = int.from_bytes(message[:4], 'little'), int.from_bytes(message[4:8], 'little'), 3
-        array_received = np.frombuffer(message[8:], dtype=np.float32)
-        array_received = array_received.reshape(dims)
-        array_received = np.rot90(array_received)
-        return array_received
 
     def send_data(self, data) -> None:
         self.message_handler.send_message(data)
@@ -87,4 +101,3 @@ if __name__ == '__main__':
             break
         # cv2.imshow('Frame',array_received)
         # cv2.waitKey(25)
-
