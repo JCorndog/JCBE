@@ -13,6 +13,7 @@ public class NNHandler : MonoBehaviour
     private byte[] byteArray = null;
     public CommunicationClient client;
     public int[] dimensions= new int[2];
+    public int[] touching = new int[1];
 
     void Start()
     {
@@ -21,6 +22,66 @@ public class NNHandler : MonoBehaviour
         dimensions[1] = camera.targetTexture.height;
         //byteArray = new byte[(camera.targetTexture.width * camera.targetTexture.height * 3 * 4) + 8];
     }
+
+    public Texture2D GetTexture2D()
+    {
+        var currentRT = RenderTexture.active;
+        RenderTexture.active = camera.targetTexture;
+
+
+        // Render the camera's view.
+        camera.Render();
+
+        // Make a new texture and read the active Render Texture into it.
+        Texture2D image = new Texture2D(camera.targetTexture.width, camera.targetTexture.height);
+        image.ReadPixels(new Rect(0, 0, camera.targetTexture.width, camera.targetTexture.height), 0, 0);
+        image.Apply();
+        RenderTexture.active = currentRT;
+        return image;
+    }
+
+    public float[] get_pixel_data(Texture2D image)
+    {
+        var a = image.GetRawTextureData<byte>();
+        float[] pixels = new float[camera.targetTexture.width * camera.targetTexture.height * 3];
+
+        for (int i = 0; i < camera.targetTexture.width; i++)
+        {
+            for (int j = 0; j < camera.targetTexture.height; j++)
+            {
+                Color pixel = image.GetPixel(i, j);
+                var offset = (i * camera.targetTexture.height + j) * 3;
+                pixels[offset + 0] = pixel[0];
+                pixels[offset + 1] = pixel[1];
+                pixels[offset + 2] = pixel[2];
+            }
+        }
+        return pixels;
+    }
+
+    public void CombineData(float[] pixels)
+    {
+        if (byteArray == null)
+        {
+            byteArray = new byte[4 + 8 + pixels.Length * 4]; //  sizeof(int) + sizeof(int)*2 + input.Length*sizeof(float)
+        }                                                    // touching + dimensions + pixel data
+        Buffer.BlockCopy(touching, 0, byteArray, 0, 4);
+        Buffer.BlockCopy(dimensions, 0, byteArray, 4, 8);
+        Buffer.BlockCopy(pixels, 0, byteArray, 4 + 8, pixels.Length * 4);
+    }
+
+    public void SendData(bool toching, Action<float[]> onOutputReceived)
+    {
+        Texture2D image = GetTexture2D();
+        float[] pixels = get_pixel_data(image);
+        CombineData(pixels);
+        client.SendData(byteArray, onOutputReceived, error =>
+        {
+            // TODO: when i am not lazy
+        });
+    }
+
+    
 
     public void SendUI()
     {
@@ -39,9 +100,6 @@ public class NNHandler : MonoBehaviour
         image.Apply();
 
         var a = image.GetRawTextureData<byte>();
-        //Debug.Log(camera.targetTexture.width + 2000000);
-        //Debug.Log(camera.targetTexture.height + 3000000);
-        //Debug.Log(a.Length);
         float[] arr = new float[camera.targetTexture.width * camera.targetTexture.height * 3];
 
         for (int i = 0; i < camera.targetTexture.width; i++)
@@ -80,15 +138,15 @@ public class NNHandler : MonoBehaviour
 
 
         // Replace the original active Render Texture.
-        //RenderTexture.active = currentRT;
+        //
     }
 
     private void add_to_byteArray(float[] input)
     {
         if (byteArray == null)
         {
-            byteArray = new byte[input.Length * 4 + 8];
-        }
+            byteArray = new byte[4 + 8 + input.Length * 4]; //  sizeof(int) + sizeof(int)*2 + input.Length*sizeof(float)
+        }                                                   // touching + dimensions + pixel data
         /*Debug.Log(input.Length + 20000000);
         Debug.Log(byteArray.Length + 1000000);*/
         Buffer.BlockCopy(dimensions, 0, byteArray, 0, 8);
