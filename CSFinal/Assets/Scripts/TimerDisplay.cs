@@ -31,19 +31,7 @@ public class TimerDisplay : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (timerStarted)
-        {
-            // subtracting the previous frame's duration
-            currentTime -= Time.deltaTime;
-            // logic current reached 0?
-            if (currentTime <= 0)
-            {
-                Debug.Log("timer reached zero");
-                timerStarted = false;
-                currentTime = 0;
-            }
-
-            timerText.text = "Time " + currentTime.ToString("f1");
-        }
+        currentTime += Time.deltaTime;
+        timerText.text = "Time " + currentTime.ToString("f1");
     }
 }

@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 using UnityEngine;
-
+using UnityEngine.SceneManagement;
 public class ChaserMovement : MonoBehaviour
 {
     public bool grounded = false;
@@ -56,7 +56,7 @@ public class ChaserMovement : MonoBehaviour
             randDir = UnityEngine.Random.Range(0, 2);
             timer = UnityEngine.Random.Range(10, 40);
         }
-        Vector3 tmp = rigidbody2D.gameObject.transform.position;
+        Vector3 tmp = transform.position;
         grounded = IsGrounded();
         if (!grounded)
         {
@@ -93,13 +93,21 @@ public class ChaserMovement : MonoBehaviour
 
     public bool IsHittingRightWall()
     {
-        RaycastHit2D hit = Physics2D.BoxCast(boxCollider2d.bounds.center, boxCollider2d.bounds.size, 0, Vector2.right, 0.01f);
+        RaycastHit2D hit = Physics2D.BoxCast(boxCollider2d.bounds.center, boxCollider2d.bounds.size, 0, Vector2.right, 0.02f);
         return hit.collider != null;
     }
 
     public bool IsHittingLeftWall()
     {
-        RaycastHit2D hit = Physics2D.BoxCast(boxCollider2d.bounds.center, boxCollider2d.bounds.size, 0, Vector2.left, 0.01f);
+        RaycastHit2D hit = Physics2D.BoxCast(boxCollider2d.bounds.center, boxCollider2d.bounds.size, 0, Vector2.left, 0.02f);
         return hit.collider != null;
+    }
+
+    private void OnCollisionEnter2D(Collision2D other)
+    {
+        if (other.gameObject.tag == "Evader")
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        }
     }
 }

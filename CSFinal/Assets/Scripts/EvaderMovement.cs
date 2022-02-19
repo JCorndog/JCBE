@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System;
 using UnityEngine;
 
-public class PlayerMovement : MonoBehaviour
+public class EvaderMovement : MonoBehaviour
 {
     public bool grounded = false;
     Vector3 speed = new Vector3(0, 0, 0);
@@ -26,7 +26,7 @@ public class PlayerMovement : MonoBehaviour
         SpriteRenderer sprRend = GetComponent<SpriteRenderer>();
     }
     
-    // Update is called once per frame
+    
     void Update()
     {
         xDir = 0;
@@ -55,9 +55,10 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    // Update is called once per frame
     void FixedUpdate()
     {
-        grounded = IsGrounded();
+        grounded = IsGrounded(0.02f);
         if (jumped == true && jumpTimer > 0)
         {
             speed.y += 0.022f;
@@ -100,10 +101,9 @@ public class PlayerMovement : MonoBehaviour
                 speed.x += moveSpeedRatio /2 * xDir;
             }
         }
-        Vector3 tmp = rigidbody2D.gameObject.transform.position; 
+        Vector3 tmp = transform.position; 
         if (!grounded)
         {
-
             if (speed.y < 0)
             {
                 speed.y -= gravity * 1.5f;
@@ -117,7 +117,8 @@ public class PlayerMovement : MonoBehaviour
         if (grounded && speed.y < 0)
         {
             Debug.Log("hit ground");
-            speed.y = 0;
+            //tmp.y = (float)(Math.Round(tmp.y * 2f) / 2f);
+            speed.y = 0f;
         }
         if (IsHittingCeiling())
         {
@@ -126,15 +127,16 @@ public class PlayerMovement : MonoBehaviour
 
         if ((IsHittingLeftWall() && speed.x < 0) || (IsHittingRightWall() && speed.x > 0))
         {
+            Debug.Log("hit wall");
             speed.x = 0;
         }
         footPos = tmp.y - .5f;
         rigidbody2D.MovePosition(tmp + speed);
     }
 
-    public bool IsGrounded()
+    public bool IsGrounded(float length)
     {
-        RaycastHit2D hit = Physics2D.BoxCast(boxCollider2d.bounds.center, boxCollider2d.bounds.size, 0, Vector2.down, 0.1f);
+        RaycastHit2D hit = Physics2D.BoxCast(boxCollider2d.bounds.center, boxCollider2d.bounds.size, 0, Vector2.down, length);
         return hit.collider != null;
     }
     public bool IsHittingCeiling()
@@ -144,14 +146,14 @@ public class PlayerMovement : MonoBehaviour
     }
 
     public bool IsHittingRightWall()
-    {
-        RaycastHit2D hit = Physics2D.BoxCast(boxCollider2d.bounds.center, boxCollider2d.bounds.size, 0, Vector2.right, 0.01f);
+    {   
+        RaycastHit2D hit = Physics2D.BoxCast(boxCollider2d.bounds.center, boxCollider2d.bounds.size, 0, Vector2.right, 0.02f);
         return hit.collider != null;
     }
 
     public bool IsHittingLeftWall()
     {
-        RaycastHit2D hit = Physics2D.BoxCast(boxCollider2d.bounds.center, boxCollider2d.bounds.size, 0, Vector2.left, 0.01f);
+        RaycastHit2D hit = Physics2D.BoxCast(boxCollider2d.bounds.center, boxCollider2d.bounds.size, 0, Vector2.left, 0.02f);
         return hit.collider != null;
     }
 }
