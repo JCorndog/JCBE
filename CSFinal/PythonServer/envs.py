@@ -17,9 +17,9 @@ class Space():
 
 
 class GameEnv():
-    def __init__(self):
+    def __init__(self, communicator):
         self.action_space = Space()
-        self.communicator = Communicator()
+        self.communicator = communicator
 
     def decode_data(self, message):
         touch = int.from_bytes(message[:4], 'little')
