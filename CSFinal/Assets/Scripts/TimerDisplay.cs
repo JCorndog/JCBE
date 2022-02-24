@@ -32,6 +32,6 @@ public class TimerDisplay : MonoBehaviour
     void Update()
     {
         currentTime += Time.deltaTime;
-        timerText.text = "Time" + currentTime.ToString("f1");
+        timerText.text = currentTime.ToString("f1");
     }
 }

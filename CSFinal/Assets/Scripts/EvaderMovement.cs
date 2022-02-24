@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class EvaderMovement : MonoBehaviour
 {
+    public Animator animator;
     public bool grounded = false;
     Vector3 speed = new Vector3(0, 0, 0);
     public float xDir = 0;
@@ -59,6 +60,7 @@ public class EvaderMovement : MonoBehaviour
     void FixedUpdate()
     {
         grounded = IsGrounded(0.02f);
+        animator.SetBool("grounded", grounded);
         if (jumped == true && jumpTimer > 0)
         {
             speed.y += 0.022f;
@@ -67,6 +69,7 @@ public class EvaderMovement : MonoBehaviour
 
         if (xDir == 0)
         {
+            animator.SetBool("moving_x", false);
             if (grounded)
             {
                 if (Math.Abs(speed.x) < 0.02)
@@ -89,6 +92,10 @@ public class EvaderMovement : MonoBehaviour
                     speed.x -= Math.Sign(speed.x) * 0.005f;
                 }
             }
+        }
+        else
+        {
+            animator.SetBool("moving_x", true);
         }
         if (Math.Abs(speed.x) < moveSpeedCap || Math.Sign(speed.x) != Math.Sign(xDir))
         {
@@ -131,6 +138,7 @@ public class EvaderMovement : MonoBehaviour
             speed.x = 0;
         }
         footPos = tmp.y - .5f;
+        animator.SetFloat("y_speed", speed.y);
         rigidbody2D.MovePosition(tmp + speed);
     }
 
