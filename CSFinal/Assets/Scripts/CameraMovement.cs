@@ -21,7 +21,8 @@ public class CameraMovement : MonoBehaviour
         {
             xTo = player.position.x - transform.position.x;
             yTo = player.position.y - transform.position.y;
-            transform.position = new Vector3(transform.position.x + xTo / 200, transform.position.y + yTo / 200, 0); // Camera follows the player with specified offset position
+            //transform.position = new Vector3(transform.position.x + xTo / 200, transform.position.y + yTo / 200, 0);
+            transform.position = new Vector3(player.position.x, player.position.y+3, 0);// Camera follows the player with specified offset position
         }
     }
 }
