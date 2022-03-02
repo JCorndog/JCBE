@@ -17,22 +17,49 @@ public class ChaserMovement : MonoBehaviour
     int randDir = 1;
     public BoxCollider2D boxCollider2d;
     public Rigidbody2D rigidbody2D;
+    public NNHandler nnInstance;
+    bool left = false;
+    bool jump = false;
+    bool right = false;
+    bool messageReadyToSend = true;
     void Start()
     {
         Rigidbody2D rigidbody2D = GetComponent<Rigidbody2D>();
         BoxCollider2D boxCollider2d = GetComponent<BoxCollider2D>();
+        NNHandler nnInstance = GetComponent<NNHandler>();
     }
 
+    void interpretData(byte[] message)
+    {
+        char flag = (char)message[0];
+
+        if (flag == 'i')
+        {
+            left = message[1] == 1;
+            jump = message[2] == 1;
+            right = message[3] == 1;
+        }
+        else
+        { 
+            //add if want to
+        }
+        messageReadyToSend = true;
+    }
     // Update is called once per frame
     void Update()
     {
+        if (messageReadyToSend)
+        {
+            //nnInstance.SendData(false, interpretData);
+            messageReadyToSend = false;
+        }
         xDir = 0;
         //Input
-        if (randDir == 0)
+        if (left)
         {
             xDir -= 1;
         }
-        if (randDir == 1)
+        if (right)
         {
             xDir += 1;
         }
@@ -40,12 +67,12 @@ public class ChaserMovement : MonoBehaviour
         {
             speed.x += moveSpeedRatio * xDir;
         }
-        if (grounded && UnityEngine.Random.Range(0.0f, 10.0f) > 9.95f)
+        if (grounded && jump)
         {
             Debug.Log("jump");
             speed.y = baseJumpSpeed;
+            jump = false;
         }
-
     }
 
     void FixedUpdate()
