@@ -1,3 +1,5 @@
+import random
+
 import zmq
 import numpy as np
 import threading
@@ -94,8 +96,11 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     import cv2
 
-    bytes_to_send = b'i001'
-
+    p = ['1', '0']
+    s = ('i' + ''.join([random.choice(p) for x in range(3)])).encode()
+    b'i001'
+    bytes_to_send = ('i' + ''.join([random.choice(p) for x in range(3)])).encode()
+    print(bytes_to_send)
     communicator = Communicator(verbose=True)
     img = None
     while True:
@@ -103,12 +108,14 @@ if __name__ == '__main__':
         array_received = communicator.get_image()
         print('Message Received')
         print('Sending')
+        bytes_to_send = ('i' + ''.join([random.choice(p) for x in range(3)])).encode()
+        print(bytes_to_send)
         communicator.send_data(bytes_to_send)
         print(array_received.shape)
-        # cv2.imshow('Frame', array_received)
+        cv2.imshow('Frame', array_received)
 
         # Press Q on keyboard to  exit
-        # if cv2.waitKey(1) & 0xFF == ord('q'):
-        #     break
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
         # cv2.imshow('Frame',array_received)
         # cv2.waitKey(25)

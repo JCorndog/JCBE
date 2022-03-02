@@ -31,13 +31,14 @@ public class ChaserMovement : MonoBehaviour
 
     void interpretData(byte[] message)
     {
+        
         char flag = (char)message[0];
 
         if (flag == 'i')
         {
-            left = message[1] == 1;
-            jump = message[2] == 1;
-            right = message[3] == 1;
+            left = (char)message[1] == '1';
+            jump = (char)message[2] == '1';
+            right = (char)message[3] == '1';
         }
         else
         { 
