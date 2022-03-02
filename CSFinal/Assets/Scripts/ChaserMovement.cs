@@ -50,7 +50,7 @@ public class ChaserMovement : MonoBehaviour
     {
         if (messageReadyToSend)
         {
-            //nnInstance.SendData(false, interpretData);
+            nnInstance.SendData(false, interpretData);
             messageReadyToSend = false;
         }
         xDir = 0;
