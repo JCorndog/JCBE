@@ -11,7 +11,7 @@ public class MessageHandler : RunAbleThread
 {
     private RequestSocket client;
 
-    private Action<float[]> onOutputReceived;
+    private Action<byte[]> onOutputReceived;
     private Action<Exception> onFail;
 
     
@@ -41,9 +41,7 @@ public class MessageHandler : RunAbleThread
 
                 if (gotMessage)
                 {
-                    var output = new float[outputBytes.Length / 4];
-                    Buffer.BlockCopy(outputBytes, 0, output, 0, outputBytes.Length);
-                    onOutputReceived?.Invoke(output);
+                    onOutputReceived?.Invoke(outputBytes);
                 }
             }
         }
@@ -86,7 +84,7 @@ public class MessageHandler : RunAbleThread
         }
     }
 
-    public void SetOnTextReceivedListener(Action<float[]> onOutputReceived, Action<Exception> fallback)
+    public void SetOnTextReceivedListener(Action<byte[]> onOutputReceived, Action<Exception> fallback)
     {
         this.onOutputReceived = onOutputReceived;
         onFail = fallback;

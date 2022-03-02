@@ -13,13 +13,13 @@ public class CommunicationClient : MonoBehaviour
         messageHandler.Start();
     }
 
-    public void Predict(float[] input, Action<float[]> onOutputReceived, Action<Exception> fallback)
+    public void Predict(float[] input, Action<byte[]> onOutputReceived, Action<Exception> fallback)
     {
         messageHandler.SetOnTextReceivedListener(onOutputReceived, fallback);
         messageHandler.SendInput(input);
     }
 
-    public void SendData(byte[] byteArray, Action<float[]> onOutputReceived, Action<Exception> fallback)
+    public void SendData(byte[] byteArray, Action<byte[]> onOutputReceived, Action<Exception> fallback)
     {
         messageHandler.SetOnTextReceivedListener(onOutputReceived, fallback);
         messageHandler.SendInputUpdated(byteArray);

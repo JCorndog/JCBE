@@ -70,7 +70,7 @@ public class NNHandler : MonoBehaviour
         Buffer.BlockCopy(pixels, 0, byteArray, 4 + 8, pixels.Length * 4);
     }
 
-    public void SendData(bool toching, Action<float[]> onOutputReceived)
+    public void SendData(bool toching, Action<byte[]> onOutputReceived)
     {
         Texture2D image = GetTexture2D();
         float[] pixels = get_pixel_data(image);
