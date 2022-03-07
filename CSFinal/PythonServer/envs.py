@@ -3,7 +3,7 @@ import numpy as np
 from messagehandler import Communicator
 
 
-class Space():
+class Space:
     space = {(1, 0, 1), (1, 1, 0), (0, 1, 0), (0, 0, 0), (1, 0, 0), (0, 0, 1), (1, 1, 1), (0, 1, 1)}
 
     def __init__(self):
@@ -16,7 +16,7 @@ class Space():
         return random.sample(self.space, 1)[0]
 
 
-class GameEnv():
+class GameEnv:
     def __init__(self, communicator):
         self.action_space = Space()
         self.communicator = communicator
@@ -34,9 +34,10 @@ class GameEnv():
         assert self.action_space.contains(action), err_msg
         print(self.encode_action(action))
 
-        observation, reward = self.decode_data(self.communicator.get_data())
 
-        # self.communicator.send_data(self.encode_action(action))
+
+        self.communicator.send_data(self.encode_action(action))
+        observation, reward = self.decode_data(self.communicator.get_data())
         # incomming_msg = self.communicator.get_data()
         done = False
         if reward == 1:
@@ -44,15 +45,18 @@ class GameEnv():
 
         return observation, reward, done, {}
 
-    def encode_action(self, action):
+    @staticmethod
+    def encode_action(action):
         message_type = b'i'
         msg = message_type
         for item in action:
-            msg += chr(item).encode()
+            msg += str(item).encode()
         return msg
 
     def reset(self):
         self.communicator.send_data(b'r')
+        observation, _ = self.decode_data(self.communicator.get_data())
+        return observation
 
     def close(self):
         self.communicator.send_data(b'c')
@@ -71,5 +75,6 @@ class Processor:
 
 
 if __name__ == '__main__':
-    g = GameEnv()
+    c = Communicator()
+    g = GameEnv(c)
     print(g.step((0, 0, 1)))
