@@ -108,6 +108,7 @@ if __name__ == '__main__':
 
     array_received = communicator.get_image()
     communicator.send_data(bytes_to_send)
+    i = 0
     while True:
         print('Loop')
         array_received = communicator.get_image()
@@ -116,11 +117,17 @@ if __name__ == '__main__':
         bytes_to_send = ('i' + ''.join([random.choice(p) for x in range(3)])).encode()
         print(bytes_to_send)
         communicator.send_data(bytes_to_send)
-        print(array_received.shape)
+        print(array_received.shape,array_received.dtype)
         cv2.imshow('Frame', array_received)
-
+        if i == 10:
+            print(array_received)
+            o = (array_received*255).astype('uint8')
+            cv2.imwrite('out2.png',o)
+            exit()
+        i+=1
         # Press Q on keyboard to  exit
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
+        # exit()
         # cv2.imshow('Frame',array_received)
         # cv2.waitKey(25)
