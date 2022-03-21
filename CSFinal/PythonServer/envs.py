@@ -4,6 +4,7 @@ from messagehandler import Communicator
 import cv2
 import time
 
+
 class Space:
     space = [(1, 1, 0), (0, 1, 0), (0, 0, 0), (1, 0, 0), (0, 0, 1), (0, 1, 1)]
     n = len(space)
@@ -28,8 +29,12 @@ class GameEnv:
         self.message_format = message_format if message_format else self.DEFAULT_MESSAGE_FORMAT
         self.ACTION_SPACE_SIZE = self.action_space.n
         self.ep = 0
-        self.total_time = 15
+        self.total_time = 7
         self.episode_start = time.perf_counter()
+        self.epoch = 0
+
+    def get_epoch_as_bytes(self, byteorder='little'):
+        return self.epoch.to_bytes(4, byteorder=byteorder)
 
     def smart_decode(self, message):
         pos = 0
@@ -60,15 +65,14 @@ class GameEnv:
     def step(self, action):
         action = self.action_space.space[action]
 
-        self.communicator.send_data(self.encode_action(action))
+        self.communicator.send_data(self.get_epoch_as_bytes() + self.encode_action(action))
         observation, touch = self.decode_data(self.communicator.get_data())
-
         done = False
         if touch == 1:
             done = True
             self.ep = 0
             reward = 0
-        elif time.perf_counter()-self.episode_start > self.total_time:
+        elif time.perf_counter() - self.episode_start > self.total_time:
             done = True
             self.ep = 0
             reward = -1
@@ -86,10 +90,13 @@ class GameEnv:
         return msg
 
     def reset(self):
-        self.communicator.send_data(b'r')
+        self.communicator.send_data(self.get_epoch_as_bytes() + b'r')
         print('sent reset')
         self.episode_start = time.perf_counter()
         observation, _ = self.decode_data(self.communicator.get_data())
+        print('Got first state')
+        time.sleep(.12)
+        self.epoch += 1
         return observation
 
     def close(self):

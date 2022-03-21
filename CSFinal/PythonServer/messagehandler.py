@@ -276,12 +276,11 @@ class MessageHandler(threading.Thread):
         self.__stop_ex = True
 
     def __receive_message(self):
-        # event = self.socket.poll(timeout=300)
-        # if event == 0:
-        #     return
+        event = self.socket.poll(timeout=1000)
+        if event == 0:
+            return
 
         self.incoming_message_queue.put(self.socket.recv())
-
         if self.verbose:
             print('Message received')
         self.__mode = SendMode.SENDING
@@ -314,7 +313,7 @@ class MessageHandler(threading.Thread):
 class Communicator:
     def __init__(self, verbose=False):
         self.verbose = verbose
-        self.message_handler = MessageHandler()
+        self.message_handler = MessageHandler(verbose=verbose)
         self.message_handler.daemon = True
         self.message_handler.start()
 
@@ -349,37 +348,40 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     import cv2
 
+    i = 0
     p = ['1', '0']
     s = ('i' + ''.join([random.choice(p) for x in range(3)])).encode()
     b'i001'
-    bytes_to_send = ('i' + ''.join([random.choice(p) for x in range(3)])).encode()
+    bytes_to_send = i.to_bytes(4, byteorder='little') + ('i' + ''.join([random.choice(p) for x in range(3)])).encode()
     print(bytes_to_send)
-    communicator = Communicator(verbose=True)
+    communicator = Communicator(verbose=False)
+    communicator.get_data()
     img = None
 
-    array_received = communicator.get_image()
+    # array_received = communicator.get_image()
     communicator.send_data(bytes_to_send)
-    i = 0
+
     while True:
         # print('Loop')
         array_received = communicator.get_image()
         # print('Message Received')
         # print('Sending')
 
-        if i == 200:
-            communicator.send_data(b'r')
+        if i == 2:
+            communicator.send_data(i.to_bytes(4, byteorder='little') + b'r')
+            print('Reset')
             i = 0
         else:
-            bytes_to_send = ('i' + ''.join([random.choice(p) for x in range(3)])).encode()
+            bytes_to_send = i.to_bytes(4, byteorder='little') + ('i' + ''.join([random.choice(p) for x in range(3)])).encode()
             # print(bytes_to_send)
             communicator.send_data(bytes_to_send)
             # print(array_received.shape,array_received.dtype)
             i += 1
 
-        cv2.imshow('Frame', array_received)
-        # Press Q on keyboard to  exit
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+        # cv2.imshow('Frame', array_received)
+        # # Press Q on keyboard to  exit
+        # if cv2.waitKey(1) & 0xFF == ord('q'):
+        #     break
         # exit()
         # cv2.imshow('Frame',array_received)
         # cv2.waitKey(25)

@@ -141,7 +141,7 @@ public class NNHandler : MonoBehaviour
 //            Debug.Log(watch.ElapsedMilliseconds);
         }, error =>
         {
-            // TODO: when i am not lazy
+            Debug.Log("ERROR");
         });
 
 

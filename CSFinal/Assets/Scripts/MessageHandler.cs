@@ -75,7 +75,7 @@ public class MessageHandler : RunAbleThread
     {
         try
         {
-            UnityEngine.Debug.Log(byteArray.Length);
+            // UnityEngine.Debug.Log(byteArray.Length);
             client.SendFrame(byteArray);
         }
         catch (Exception e)

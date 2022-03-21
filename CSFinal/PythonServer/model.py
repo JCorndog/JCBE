@@ -18,14 +18,23 @@ print(tf.__version__)
 REPLAY_MEMORY_SIZE = 50_000
 MIN_REPLAY_MEMORY_SIZE = 1_000
 MODEL_NAME = 'first'
+temp_name = MODEL_NAME
+
+x = 1
+while os.path.isdir('models/' + temp_name):
+    temp_name = MODEL_NAME + str(x)
+    x += 1
+MODEL_NAME = temp_name
+
+
 MINIBACH_SIZE = 64
 DISCOUNT = 0.99
 UPDATE_TARGET_EVERY = 5
 MIN_REWARD = -200
-EPISODES = 3000
+EPISODES = 10000
 
 epsilon = 1  # not a constant, going to be decayed
-EPSILON_DECAY = 0.9977
+EPSILON_DECAY = 0.9994703085993939
 MIN_EPSILON = 0.001
 
 AGGREGATE_STATS_EVERY = 25
@@ -77,7 +86,7 @@ class DQNAgent:
 
         self.replay_memory = deque(maxlen=REPLAY_MEMORY_SIZE)
 
-        self.tensorboard = ModifiedTensorBoard(log_dir=f'logs/{MODEL_NAME}-{int(time.time())}')
+        self.tensorboard = ModifiedTensorBoard(log_dir=f'logs/{MODEL_NAME}/{int(time.time())}')
 
         self.target_update_counter = 0
 
@@ -110,7 +119,7 @@ class DQNAgent:
 
     def train(self, terminal_state, step):
         if len(self.replay_memory) < MIN_REPLAY_MEMORY_SIZE:
-            time.sleep(.12) # mimic time taken to train model
+            time.sleep(.12)  # mimic time taken to train model
             return
 
         minibatch = random.sample(self.replay_memory, MINIBACH_SIZE)
@@ -152,9 +161,9 @@ def main():
     ep_rewards = [-200]
     com = Communicator()
     env = GameEnv(com)
-    random.seed(1)
-    np.random.seed(1)
-    tf.random.set_seed(1)
+    random.seed(2)
+    np.random.seed(2)
+    tf.random.set_seed(2)
 
     if not os.path.isdir('models'):
         os.makedirs('models')
@@ -193,7 +202,8 @@ def main():
             # print(n-s)
             s = n
             step += 1
-            # print(step)
+            if step % 10 == 0:
+                print(step)
         print(f'Episode: {episode}\nSteps: {step}\nEp Reward: {episode_reward}\nEpsilon:{epsilon:0.4f}\n')
         # Append episode reward to a list and log stats (every given number of episodes)
         ep_rewards.append(episode_reward)
@@ -205,7 +215,7 @@ def main():
 
             # Save model, but only when min reward is greater or equal a set value
             if min_reward >= MIN_REWARD:
-                agent.model.save(f'models/{MODEL_NAME}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time.time())}.model')
+                agent.model.save(f'models/{MODEL_NAME}/{int(time.time())}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min.model')
 
         # Decay epsilon
         if epsilon > MIN_EPSILON:
