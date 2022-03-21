@@ -25,15 +25,6 @@ public class EvaderMovement : MonoBehaviour
         Rigidbody2D rigidbody2D = GetComponent<Rigidbody2D>();
         BoxCollider2D boxCollider2d = GetComponent<BoxCollider2D>();
         SpriteRenderer sprRend = GetComponent<SpriteRenderer>();
-
-        float x_max = 572.5f;
-        float x_min = 555.5f;
-        float y = 309.0f;
-        var section_width = 17.0f / 12.0f;
-        var rand = new System.Random();
-        float x = (((int)(UnityEngine.Random.value * 6) * section_width * 2) + section_width) + x_min;
-        Vector3 startpos = new Vector3(x, y, 1.0f);
-        transform.position = startpos;
     }
     
     
