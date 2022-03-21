@@ -1,14 +1,14 @@
-import random
-import time
 from collections import deque
 import os
+import random
+import time
 
-import tensorflow as tf
 from keras import layers
 from keras.callbacks import TensorBoard
-from keras.models import Sequential
+from keras.models import Sequential, load_model
 from keras.optimizer_v2.adam import Adam
 import numpy as np
+import tensorflow as tf
 
 from envs import GameEnv
 from messagehandler import Communicator
@@ -20,12 +20,13 @@ MIN_REPLAY_MEMORY_SIZE = 1_000
 MODEL_NAME = 'first'
 temp_name = MODEL_NAME
 
-x = 1
-while os.path.isdir('models/' + temp_name):
-    temp_name = MODEL_NAME + str(x)
-    x += 1
-MODEL_NAME = temp_name
+# x = 1
+# while os.path.isdir('models/' + temp_name):
+#     temp_name = MODEL_NAME + str(x)
+#     x += 1
+# MODEL_NAME = temp_name
 
+LOAD_MODEL = 'models/first/1647893930____-1.00max__-33.92avg__-48.00min.model'
 
 MINIBACH_SIZE = 64
 DISCOUNT = 0.99
@@ -91,23 +92,26 @@ class DQNAgent:
         self.target_update_counter = 0
 
     def create_model(self):
-        model = Sequential()
-        model.add(layers.Conv2D(filters=6, kernel_size=(5, 5), activation='relu', input_shape=(44, 44, 3)))
-        model.add(layers.Activation('relu'))
-        model.add(layers.MaxPooling2D())
-        model.add(layers.Dropout(0.1))
+        if LOAD_MODEL:
+            model = load_model(LOAD_MODEL)
+        else:
+            model = Sequential()
+            model.add(layers.Conv2D(filters=6, kernel_size=(5, 5), activation='relu', input_shape=(44, 44, 3)))
+            model.add(layers.Activation('relu'))
+            model.add(layers.MaxPooling2D())
+            model.add(layers.Dropout(0.1))
 
-        model.add(layers.Conv2D(filters=16, kernel_size=(5, 5), activation='relu'))
-        model.add(layers.Activation('relu'))
-        model.add(layers.MaxPooling2D())
-        model.add(layers.Dropout(0.1))
+            model.add(layers.Conv2D(filters=16, kernel_size=(5, 5), activation='relu'))
+            model.add(layers.Activation('relu'))
+            model.add(layers.MaxPooling2D())
+            model.add(layers.Dropout(0.1))
 
-        model.add(layers.Flatten())
-        model.add(layers.Dense(units=50, activation='relu'))
-        model.add(layers.Dense(units=20, activation='relu'))
-        model.add(layers.Dense(units=6, activation='softmax'))
+            model.add(layers.Flatten())
+            model.add(layers.Dense(units=50, activation='relu'))
+            model.add(layers.Dense(units=20, activation='relu'))
+            model.add(layers.Dense(units=6, activation='softmax'))
 
-        model.compile(loss='mse', optimizer=Adam(learning_rate=0.001), metrics=['accuracy'])
+            model.compile(loss='mse', optimizer=Adam(learning_rate=0.001), metrics=['accuracy'])
         return model
 
     def update_replay_memory(self, transition):
