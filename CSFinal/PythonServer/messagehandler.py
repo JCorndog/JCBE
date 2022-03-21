@@ -28,15 +28,6 @@ class MessageHandler(threading.Thread):
 
         self.mode = SendMode.RECEIVING
         self.__mode = SendMode.RECEIVING
-        self.data_loaded = True
-
-        self.sending_message = threading.Lock()
-        self.receiving_message = threading.Lock()
-        self.ready_to_send_msg = False
-        self.ready_to_receive_msg = False
-
-        self.waiting_for_msg_to_send = False
-        self.waiting_for_msg_to_receive = True
 
         self.__stop_ex = False
 
