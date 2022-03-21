@@ -1,28 +1,30 @@
 import random
-import numpy as np
-from messagehandler import Communicator
-import cv2
 import time
+from typing import Tuple, List, Dict
+
+import numpy as np
+
+from messagehandler import Communicator
 
 
 class Space:
-    space = [(1, 1, 0), (0, 1, 0), (0, 0, 0), (1, 0, 0), (0, 0, 1), (0, 1, 1)]
+    space: List[Tuple[int, int, int]] = [(1, 1, 0), (0, 1, 0), (0, 0, 0), (1, 0, 0), (0, 0, 1), (0, 1, 1)]
     n = len(space)
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
-    def contains(self, x):
+    def contains(self, x: Tuple[int, int, int]) -> bool:
         return x in self.space
 
-    def sample(self):
+    def sample(self) -> Tuple[int, int, int]:
         return random.sample(self.space, 1)[0]
 
 
 class GameEnv:
     DEFAULT_MESSAGE_FORMAT = [('touched', 4, int), ('height', 4, int), ('width', 4, int), ('image', -1, np.float32)]
 
-    def __init__(self, communicator, message_format=None):
+    def __init__(self, communicator: Communicator, message_format=None) -> None:
         self.action_space = Space()
         self.communicator = communicator
         communicator.get_data()
@@ -33,10 +35,10 @@ class GameEnv:
         self.episode_start = time.perf_counter()
         self.epoch = 0
 
-    def get_epoch_as_bytes(self, byteorder='little'):
+    def get_epoch_as_bytes(self, byteorder: str = 'little') -> bytes:
         return self.epoch.to_bytes(4, byteorder=byteorder)
 
-    def smart_decode(self, message):
+    def smart_decode(self, message: bytes) -> Dict:
         pos = 0
         data = {}
         for name, num_bytes, tipe in self.message_format:
@@ -54,7 +56,8 @@ class GameEnv:
 
         return data
 
-    def decode_data(self, message):
+    @staticmethod
+    def decode_data(message: bytes) -> Tuple[np.ndarray, int]:
         touch = int.from_bytes(message[:4], 'little')
         dims = int.from_bytes(message[4:8], 'little'), int.from_bytes(message[8:12], 'little'), 3
         array_received = np.frombuffer(message[12:], dtype=np.float32)
@@ -62,10 +65,10 @@ class GameEnv:
         array_received = np.rot90(array_received)
         return array_received, touch
 
-    def step(self, action):
-        action = self.action_space.space[action]
+    def step(self, action: int) -> Tuple[np.ndarray, int, bool]:
+        selected_action = self.action_space.space[action]
 
-        self.communicator.send_data(self.get_epoch_as_bytes() + self.encode_action(action))
+        self.communicator.send_data(self.get_epoch_as_bytes() + self.encode_action(selected_action))
         observation, touch = self.decode_data(self.communicator.get_data())
         done = False
         if touch == 1:
@@ -82,14 +85,14 @@ class GameEnv:
         return observation, reward, done
 
     @staticmethod
-    def encode_action(action):
+    def encode_action(action: Tuple[int, int, int]) -> bytes:
         message_type = b'i'
         msg = message_type
         for item in action:
             msg += str(item).encode()
         return msg
 
-    def reset(self):
+    def reset(self) -> np.ndarray:
         self.communicator.send_data(self.get_epoch_as_bytes() + b'r')
         print('sent reset')
         self.episode_start = time.perf_counter()
@@ -99,20 +102,12 @@ class GameEnv:
         self.epoch += 1
         return observation
 
-    def close(self):
+    def close(self) -> None:
         self.communicator.send_data(b'c')
 
-    def render(self, mode=None, close=False):
+    def render(self, mode=None, close: bool = False) -> None:
         if not mode:
             return
-
-
-class Processor:
-    def __init__(self):
-        pass
-
-    def process_step(self, observation, reward, done, info):
-        return observation, reward, done, info
 
 
 if __name__ == '__main__':
