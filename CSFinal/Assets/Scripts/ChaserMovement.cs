@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+
 public class ChaserMovement : MonoBehaviour
 {
     public bool grounded = false;
@@ -21,39 +22,88 @@ public class ChaserMovement : MonoBehaviour
     bool left = false;
     bool jump = false;
     bool right = false;
+
     bool messageReadyToSend = true;
+    bool readyToReset = false;
+    bool touched = false;
+    int epoch = 0;
+    int step = 0;
+
+    System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
+
     void Start()
     {
         Rigidbody2D rigidbody2D = GetComponent<Rigidbody2D>();
         BoxCollider2D boxCollider2d = GetComponent<BoxCollider2D>();
         NNHandler nnInstance = GetComponent<NNHandler>();
+        float x_max = 572.5f;
+        float x_min = 555.5f;
+        float y = 309.0f;
+        var section_width = 17.0f / 12.0f;
+        var rand = new System.Random();
+        float x = ((int)(UnityEngine.Random.value * 6) * section_width * 2)+x_min;
+        Vector3 startpos = new Vector3(x, y,1.0f);
+        transform.position = startpos;
     }
 
     void interpretData(byte[] message)
     {
-        
-        char flag = (char)message[0];
+        watch.Stop();
+        watch.Restart();
+        epoch = BitConverter.ToInt32(message, 0);
+        //Debug.Log("Received");
+        char flag = (char)message[4];
 
         if (flag == 'i')
         {
-            left = (char)message[1] == '1';
-            jump = (char)message[2] == '1';
-            right = (char)message[3] == '1';
+            left = (char)message[5] == '1';
+            jump = (char)message[6] == '1';
+            right = (char)message[7] == '1';
+        }
+        else if(flag == 'r')
+        {
+            // Debug.Log("Ready to reset");
+            // Debug.Log(epoch);
+            readyToReset = true;
+            return;
         }
         else
-        { 
-            //add if want to
+        {
+            // Something else
         }
         messageReadyToSend = true;
+
     }
+
     // Update is called once per frame
     void Update()
     {
-        if (messageReadyToSend)
+        if (readyToReset)
         {
-            nnInstance.SendData(false, interpretData);
-            messageReadyToSend = false;
+            Debug.Log("Reseting");
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+            return;
         }
+        else
+        {
+            if (messageReadyToSend)
+            {
+                watch.Start();
+                nnInstance.SendData(touched, interpretData);
+                //Debug.Log("Sending Message");
+                //Debug.Log(step);
+                messageReadyToSend = false;
+            }
+            else if (watch.ElapsedMilliseconds > 300)
+            {
+                watch.Stop();
+                watch.Restart();
+                messageReadyToSend = true;
+                Debug.Log("Try Again");
+            }
+        }
+        
+
         xDir = 0;
         //Input
         if (left)
@@ -70,10 +120,11 @@ public class ChaserMovement : MonoBehaviour
         }
         if (grounded && jump)
         {
-            Debug.Log("jump");
+            //Debug.Log("jump");
             speed.y = baseJumpSpeed;
             jump = false;
         }
+        step++;
     }
 
     void FixedUpdate()
@@ -92,7 +143,7 @@ public class ChaserMovement : MonoBehaviour
         }
         if (grounded && speed.y < 0)
         {
-            Debug.Log("hit ground");
+            //Debug.Log("hit ground");
             speed.y = 0;
         }
         if (IsHittingCeiling())
@@ -106,6 +157,7 @@ public class ChaserMovement : MonoBehaviour
         }*/
         footPos = tmp.y - .5f;
         rigidbody2D.MovePosition(tmp + speed);
+        
     }
 
     public bool IsGrounded()
@@ -135,7 +187,7 @@ public class ChaserMovement : MonoBehaviour
     {
         if (other.gameObject.tag == "Evader")
         {
-            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+            touched = true;
         }
     }
 }

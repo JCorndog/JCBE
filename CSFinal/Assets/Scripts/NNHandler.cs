@@ -13,7 +13,7 @@ public class NNHandler : MonoBehaviour
     private byte[] byteArray = null;
     public CommunicationClient client;
     public int[] dimensions= new int[2];
-    public int[] touching = new int[1];
+    public int[] touchinga = new int[1];
 
     void Start()
     {
@@ -65,13 +65,21 @@ public class NNHandler : MonoBehaviour
         {
             byteArray = new byte[4 + 8 + pixels.Length * 4]; //  sizeof(int) + sizeof(int)*2 + input.Length*sizeof(float)
         }                                                    // touching + dimensions + pixel data
-        Buffer.BlockCopy(touching, 0, byteArray, 0, 4);
+        Buffer.BlockCopy(touchinga, 0, byteArray, 0, 4);
         Buffer.BlockCopy(dimensions, 0, byteArray, 4, 8);
         Buffer.BlockCopy(pixels, 0, byteArray, 4 + 8, pixels.Length * 4);
     }
 
-    public void SendData(bool toching, Action<byte[]> onOutputReceived)
-    {
+    public void SendData(bool touching, Action<byte[]> onOutputReceived)
+    {   
+        if (touching)
+        {
+            touchinga[0] = 1;
+        }
+        else
+        {
+            touchinga[0] = 0;
+        }
         Texture2D image = GetTexture2D();
         float[] pixels = get_pixel_data(image);
         CombineData(pixels);
@@ -133,7 +141,7 @@ public class NNHandler : MonoBehaviour
 //            Debug.Log(watch.ElapsedMilliseconds);
         }, error =>
         {
-            // TODO: when i am not lazy
+            Debug.Log("ERROR");
         });
 
 
