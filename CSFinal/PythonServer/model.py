@@ -12,23 +12,23 @@ import numpy as np
 
 from envs import GameEnv
 from messagehandler import Communicator
-import time
+
 print(tf.__version__)
 
-REPLAY_MEMORY_SIZE = 10_000
-MIN_REPLAY_MEMORY_SIZE = 500
+REPLAY_MEMORY_SIZE = 50_000
+MIN_REPLAY_MEMORY_SIZE = 1_000
 MODEL_NAME = 'first'
 MINIBACH_SIZE = 64
 DISCOUNT = 0.99
 UPDATE_TARGET_EVERY = 5
 MIN_REWARD = -200
-EPISODES = 20
+EPISODES = 3000
 
 epsilon = 1  # not a constant, going to be decayed
-EPSILON_DECAY = 0.99975
+EPSILON_DECAY = 0.9977
 MIN_EPSILON = 0.001
 
-AGGREGATE_STATS_EVERY = 50
+AGGREGATE_STATS_EVERY = 25
 
 
 # from https://pythonprogramming.net/deep-q-learning-dqn-reinforcement-learning-python-tutorial/
@@ -105,11 +105,12 @@ class DQNAgent:
         self.replay_memory.append(transition)
 
     def get_qs(self, state):
-        print(type(state),state.shape)
+        # print(type(state),state.shape)
         return self.model.predict(np.array([state]))[0]
 
     def train(self, terminal_state, step):
         if len(self.replay_memory) < MIN_REPLAY_MEMORY_SIZE:
+            time.sleep(.12) # mimic time taken to train model
             return
 
         minibatch = random.sample(self.replay_memory, MINIBACH_SIZE)
@@ -189,10 +190,11 @@ def main():
 
             current_state = new_state
             n = time.perf_counter()
-            print(n-s)
+            # print(n-s)
             s = n
             step += 1
-
+            # print(step)
+        print(f'Episode: {episode}\nSteps: {step}\nEp Reward: {episode_reward}\nEpsilon:{epsilon:0.4f}\n')
         # Append episode reward to a list and log stats (every given number of episodes)
         ep_rewards.append(episode_reward)
         if not episode % AGGREGATE_STATS_EVERY or episode == 1:

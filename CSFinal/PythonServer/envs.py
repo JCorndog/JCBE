@@ -2,6 +2,7 @@ import random
 import numpy as np
 from messagehandler import Communicator
 import cv2
+import time
 
 class Space:
     space = [(1, 1, 0), (0, 1, 0), (0, 0, 0), (1, 0, 0), (0, 0, 1), (0, 1, 1)]
@@ -23,10 +24,12 @@ class GameEnv:
     def __init__(self, communicator, message_format=None):
         self.action_space = Space()
         self.communicator = communicator
+        communicator.get_data()
         self.message_format = message_format if message_format else self.DEFAULT_MESSAGE_FORMAT
         self.ACTION_SPACE_SIZE = self.action_space.n
-        self.image = cv2.imread('out2.png')
         self.ep = 0
+        self.total_time = 15
+        self.episode_start = time.perf_counter()
 
     def smart_decode(self, message):
         pos = 0
@@ -56,19 +59,21 @@ class GameEnv:
 
     def step(self, action):
         action = self.action_space.space[action]
-        # err_msg = "%r (%s) invalid action" % (action, type(action))
-        # assert self.action_space.contains(action), err_msg
-        # print(self.encode_action(action))
 
-        # self.communicator.send_data(self.encode_action(action))
-        # observation, reward = self.decode_data(self.communicator.get_data())
-        observation = self.image
-        reward = -1
-        # incomming_msg = self.communicator.get_data()
+        self.communicator.send_data(self.encode_action(action))
+        observation, touch = self.decode_data(self.communicator.get_data())
+
         done = False
-        if reward == 1 or self.ep == 100:
+        if touch == 1:
             done = True
-            self.ep = 1
+            self.ep = 0
+            reward = 0
+        elif time.perf_counter()-self.episode_start > self.total_time:
+            done = True
+            self.ep = 0
+            reward = -1
+        else:
+            reward = -1
         self.ep += 1
         return observation, reward, done
 
@@ -81,8 +86,9 @@ class GameEnv:
         return msg
 
     def reset(self):
-        return self.image
         self.communicator.send_data(b'r')
+        print('sent reset')
+        self.episode_start = time.perf_counter()
         observation, _ = self.decode_data(self.communicator.get_data())
         return observation
 
