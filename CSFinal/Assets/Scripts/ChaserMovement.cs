@@ -19,6 +19,7 @@ public class ChaserMovement : MonoBehaviour
     public BoxCollider2D boxCollider2d;
     public Rigidbody2D rigidbody2D;
     public NNHandler nnInstance;
+    public GameObject evader;
     bool left = false;
     bool jump = false;
     bool right = false;
@@ -36,6 +37,8 @@ public class ChaserMovement : MonoBehaviour
         Rigidbody2D rigidbody2D = GetComponent<Rigidbody2D>();
         BoxCollider2D boxCollider2d = GetComponent<BoxCollider2D>();
         NNHandler nnInstance = GetComponent<NNHandler>();
+        evader = GameObject.Find("Evader");
+
     }
 
     void interpretData(byte[] message)
@@ -67,6 +70,13 @@ public class ChaserMovement : MonoBehaviour
 
     }
 
+    float GetDist2Evader()
+    {
+        float d = Vector3.Distance(transform.position, evader.transform.position);
+        Debug.Log(d);
+        return d;
+    }
+
     // Update is called once per frame
     void Update()
     {
@@ -81,7 +91,7 @@ public class ChaserMovement : MonoBehaviour
             if (messageReadyToSend)
             {
                 watch.Start();
-                nnInstance.SendData(touched, interpretData);
+                nnInstance.SendData(touched, GetDist2Evader(), interpretData);
                 //Debug.Log("Sending Message");
                 //Debug.Log(step);
                 messageReadyToSend = false;

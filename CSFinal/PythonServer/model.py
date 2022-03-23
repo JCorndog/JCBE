@@ -17,7 +17,7 @@ print(tf.__version__)
 
 REPLAY_MEMORY_SIZE = 50_000
 MIN_REPLAY_MEMORY_SIZE = 1_000
-MODEL_NAME = 'first'
+MODEL_NAME = 'fourth'
 temp_name = MODEL_NAME
 
 # x = 1
@@ -26,19 +26,19 @@ temp_name = MODEL_NAME
 #     x += 1
 # MODEL_NAME = temp_name
 
-LOAD_MODEL = 'models/first/1647893930____-1.00max__-33.92avg__-48.00min.model'
+LOAD_MODEL = None  # 'models/first/1647893930____-1.00max__-33.92avg__-48.00min.model'
 
 MINIBACH_SIZE = 64
 DISCOUNT = 0.99
 UPDATE_TARGET_EVERY = 5
-MIN_REWARD = -200
-EPISODES = 10000
+MIN_REWARD = -70
+EPISODES = 65_000
 
 epsilon = 1  # not a constant, going to be decayed
-EPSILON_DECAY = 0.9994703085993939
+EPSILON_DECAY = 0.9999306876841536
 MIN_EPSILON = 0.001
 
-AGGREGATE_STATS_EVERY = 25
+AGGREGATE_STATS_EVERY = 50
 
 
 # from https://pythonprogramming.net/deep-q-learning-dqn-reinforcement-learning-python-tutorial/
@@ -99,12 +99,12 @@ class DQNAgent:
             model.add(layers.Conv2D(filters=6, kernel_size=(5, 5), activation='relu', input_shape=(44, 44, 3)))
             model.add(layers.Activation('relu'))
             model.add(layers.MaxPooling2D())
-            model.add(layers.Dropout(0.1))
+            model.add(layers.Dropout(0.05))
 
-            model.add(layers.Conv2D(filters=16, kernel_size=(5, 5), activation='relu'))
+            model.add(layers.Conv2D(filters=6, kernel_size=(5, 5), activation='relu'))
             model.add(layers.Activation('relu'))
             model.add(layers.MaxPooling2D())
-            model.add(layers.Dropout(0.1))
+            model.add(layers.Dropout(0.05))
 
             model.add(layers.Flatten())
             model.add(layers.Dense(units=50, activation='relu'))
@@ -112,6 +112,23 @@ class DQNAgent:
             model.add(layers.Dense(units=6, activation='softmax'))
 
             model.compile(loss='mse', optimizer=Adam(learning_rate=0.001), metrics=['accuracy'])
+            # model = Sequential()
+            # model.add(layers.Conv2D(filters=6, kernel_size=(5, 5), activation='relu', input_shape=(44, 44, 3)))
+            # model.add(layers.Activation('relu'))
+            # model.add(layers.MaxPooling2D())
+            # model.add(layers.Dropout(0.1))
+            #
+            # model.add(layers.Conv2D(filters=16, kernel_size=(5, 5), activation='relu'))
+            # model.add(layers.Activation('relu'))
+            # model.add(layers.MaxPooling2D())
+            # model.add(layers.Dropout(0.1))
+            #
+            # model.add(layers.Flatten())
+            # model.add(layers.Dense(units=50, activation='relu'))
+            # model.add(layers.Dense(units=20, activation='relu'))
+            # model.add(layers.Dense(units=6, activation='softmax'))
+            #
+            # model.compile(loss='mse', optimizer=Adam(learning_rate=0.001), metrics=['accuracy'])
         return model
 
     def update_replay_memory(self, transition):
@@ -162,7 +179,7 @@ class DQNAgent:
 
 def main():
     global epsilon
-    ep_rewards = [-200]
+    ep_rewards = [-80]
     com = Communicator()
     env = GameEnv(com)
     random.seed(2)
@@ -218,7 +235,7 @@ def main():
             agent.tensorboard.update_stats(reward_avg=average_reward, reward_min=min_reward, reward_max=max_reward, epsilon=epsilon)
 
             # Save model, but only when min reward is greater or equal a set value
-            if min_reward >= MIN_REWARD:
+            if min_reward >= MIN_REWARD and episode % 250 == 0:
                 agent.model.save(f'models/{MODEL_NAME}/{int(time.time())}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min.model')
 
         # Decay epsilon

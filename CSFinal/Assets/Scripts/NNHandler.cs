@@ -14,6 +14,7 @@ public class NNHandler : MonoBehaviour
     public CommunicationClient client;
     public int[] dimensions= new int[2];
     public int[] touchinga = new int[1];
+    public float[] distancea = new float[1];
 
     void Start()
     {
@@ -63,14 +64,15 @@ public class NNHandler : MonoBehaviour
     {
         if (byteArray == null)
         {
-            byteArray = new byte[4 + 8 + pixels.Length * 4]; //  sizeof(int) + sizeof(int)*2 + input.Length*sizeof(float)
+            byteArray = new byte[4 + 4 + 8 + pixels.Length * 4]; //  sizeof(int) + sizeof(float) + sizeof(int)*2 + input.Length*sizeof(float)
         }                                                    // touching + dimensions + pixel data
         Buffer.BlockCopy(touchinga, 0, byteArray, 0, 4);
-        Buffer.BlockCopy(dimensions, 0, byteArray, 4, 8);
-        Buffer.BlockCopy(pixels, 0, byteArray, 4 + 8, pixels.Length * 4);
+        Buffer.BlockCopy(distancea, 0, byteArray, 4, 4);
+        Buffer.BlockCopy(dimensions, 0, byteArray, 8, 8);
+        Buffer.BlockCopy(pixels, 0, byteArray, 4 + 4 + 8, pixels.Length * 4);
     }
 
-    public void SendData(bool touching, Action<byte[]> onOutputReceived)
+    public void SendData(bool touching, float distance ,Action<byte[]> onOutputReceived)
     {   
         if (touching)
         {
@@ -80,6 +82,7 @@ public class NNHandler : MonoBehaviour
         {
             touchinga[0] = 0;
         }
+        distancea[0] = distance;
         Texture2D image = GetTexture2D();
         float[] pixels = get_pixel_data(image);
         CombineData(pixels);
