@@ -23,7 +23,7 @@ class Space:
 
 class GameEnv:
     DEFAULT_MESSAGE_FORMAT = [('touched', 4, int), ('height', 4, int), ('width', 4, int), ('image', -1, np.float32)]
-    TOUCH_REWARD = 15
+    TOUCH_REWARD = 25
     MOVE_PENALTY = 1
 
     def __init__(self, communicator: Communicator, message_format=None) -> None:
@@ -69,10 +69,10 @@ class GameEnv:
         array_received = np.rot90(array_received)
         return array_received, touch, distance
 
-    def step(self, action: int) -> Tuple[np.ndarray, int, bool]:
+    def step(self, action: int, random_move: bool) -> Tuple[np.ndarray, int, bool]:
         selected_action = self.action_space.space[action]
-
-        self.communicator.send_data(self.get_epoch_as_bytes() + self.encode_action(selected_action))
+        random_move = b'1' if random_move else b'0'
+        self.communicator.send_data(self.get_epoch_as_bytes() + self.encode_action(selected_action)+random_move)
         observation, touch, distance = self.decode_data(self.communicator.get_data())
 
         done = False
@@ -85,7 +85,7 @@ class GameEnv:
             self.ep = 0
             reward = -self.MOVE_PENALTY
         elif distance < self.distance:
-            reward = -self.MOVE_PENALTY/3
+            reward = -self.MOVE_PENALTY / 3
         else:
             reward = -self.MOVE_PENALTY
         self.ep += 1

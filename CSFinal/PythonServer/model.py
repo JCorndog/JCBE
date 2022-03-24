@@ -32,10 +32,10 @@ MINIBACH_SIZE = 64
 DISCOUNT = 0.99
 UPDATE_TARGET_EVERY = 5
 MIN_REWARD = -70
-EPISODES = 65_000
+EPISODES = 50_000
 
 epsilon = 1  # not a constant, going to be decayed
-EPSILON_DECAY = 0.9999306876841536
+EPSILON_DECAY = 0.9999079008376686
 MIN_EPSILON = 0.001
 
 AGGREGATE_STATS_EVERY = 50
@@ -109,26 +109,9 @@ class DQNAgent:
             model.add(layers.Flatten())
             model.add(layers.Dense(units=50, activation='relu'))
             model.add(layers.Dense(units=20, activation='relu'))
-            model.add(layers.Dense(units=6, activation='softmax'))
+            model.add(layers.Dense(units=6, activation='linear'))
 
             model.compile(loss='mse', optimizer=Adam(learning_rate=0.001), metrics=['accuracy'])
-            # model = Sequential()
-            # model.add(layers.Conv2D(filters=6, kernel_size=(5, 5), activation='relu', input_shape=(44, 44, 3)))
-            # model.add(layers.Activation('relu'))
-            # model.add(layers.MaxPooling2D())
-            # model.add(layers.Dropout(0.1))
-            #
-            # model.add(layers.Conv2D(filters=16, kernel_size=(5, 5), activation='relu'))
-            # model.add(layers.Activation('relu'))
-            # model.add(layers.MaxPooling2D())
-            # model.add(layers.Dropout(0.1))
-            #
-            # model.add(layers.Flatten())
-            # model.add(layers.Dense(units=50, activation='relu'))
-            # model.add(layers.Dense(units=20, activation='relu'))
-            # model.add(layers.Dense(units=6, activation='softmax'))
-            #
-            # model.compile(loss='mse', optimizer=Adam(learning_rate=0.001), metrics=['accuracy'])
         return model
 
     def update_replay_memory(self, transition):
@@ -205,11 +188,13 @@ def main():
             if np.random.random() > epsilon:
                 # Get action from Q table
                 action = np.argmax(agent.get_qs(current_state))
+                random_move = False
             else:
                 # Get random action
+                random_move = True
                 action = np.random.randint(0, env.ACTION_SPACE_SIZE)
 
-            new_state, reward, done = env.step(action)
+            new_state, reward, done = env.step(action,random_move)
 
             # Transform new continous state to new discrete state and count reward
             episode_reward += reward

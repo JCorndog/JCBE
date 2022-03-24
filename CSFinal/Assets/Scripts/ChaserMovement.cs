@@ -29,15 +29,27 @@ public class ChaserMovement : MonoBehaviour
     bool touched = false;
     int epoch = 0;
     int step = 0;
+    bool randomMove = false;
+
+    public Sprite spriteRandom;
+    public SpriteRenderer spriteRenderer;
+    public Sprite spriteSmart;
 
     System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
 
     void Start()
     {
+
         Rigidbody2D rigidbody2D = GetComponent<Rigidbody2D>();
         BoxCollider2D boxCollider2d = GetComponent<BoxCollider2D>();
         NNHandler nnInstance = GetComponent<NNHandler>();
         evader = GameObject.Find("Evader");
+
+
+        SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
+        Sprite spriteRandom = GetComponent<Sprite>();
+        Sprite spriteSmart = GetComponent<Sprite>();
+
 
     }
 
@@ -54,6 +66,14 @@ public class ChaserMovement : MonoBehaviour
             left = (char)message[5] == '1';
             jump = (char)message[6] == '1';
             right = (char)message[7] == '1';
+            if ((char)message[8] == '1')
+            {
+                randomMove = true;
+            }
+            else
+            {
+                randomMove = false;
+            }
         }
         else if(flag == 'r')
         {
@@ -72,14 +92,20 @@ public class ChaserMovement : MonoBehaviour
 
     float GetDist2Evader()
     {
-        float d = Vector3.Distance(transform.position, evader.transform.position);
-        Debug.Log(d);
-        return d;
+        return Vector3.Distance(transform.position, evader.transform.position);
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (randomMove)
+        {
+            spriteRenderer.sprite = spriteRandom;
+        }
+        else
+        {
+            spriteRenderer.sprite = spriteSmart;
+        }
         if (readyToReset)
         {
             Debug.Log("Reseting");
