@@ -7,7 +7,7 @@ public class EvaderMovement : MonoBehaviour
 {
     public Animator animator;
     public bool grounded = false;
-    Vector3 speed = new Vector3(0, 0, 0);
+    public Vector3 speed = new Vector3(0, 0, 0);
     public float xDir = 0;
     float moveSpeedRatio = 0.02f;
     float moveSpeedCap = 0.16f;
@@ -20,14 +20,28 @@ public class EvaderMovement : MonoBehaviour
     public BoxCollider2D boxCollider2d;
     public Rigidbody2D rigidbody2D;
     public SpriteRenderer sprRend;
+
+    public int[] movement = new int[6]; // [x=0,x>0,x<0,y=0,y>0,y<0]
+
     void Start()
     {
         Rigidbody2D rigidbody2D = GetComponent<Rigidbody2D>();
         BoxCollider2D boxCollider2d = GetComponent<BoxCollider2D>();
         SpriteRenderer sprRend = GetComponent<SpriteRenderer>();
     }
-    
-    
+
+    void update_movement()
+    {   // [x=0,x>0,x<0,y=0,y>0,y<0]
+
+        movement[0] = speed.x == 0 ? 1 : 0;
+        movement[1] = speed.x > 0 ? 1 : 0;
+        movement[2] = speed.x < 0 ? 1 : 0;
+        movement[3] = speed.y == 0 ? 1 : 0;
+        movement[4] = speed.y > 0 ? 1 : 0;
+        movement[5] = speed.y < 0 ? 1 : 0;
+    }
+
+
     void Update()
     {
         xDir = 0;
@@ -54,6 +68,7 @@ public class EvaderMovement : MonoBehaviour
             jumpTimer = 0;
             jumped = false;
         }
+        update_movement();
     }
 
     // Update is called once per frame

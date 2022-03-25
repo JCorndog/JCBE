@@ -60,37 +60,39 @@ class GameEnv:
         return data
 
     @staticmethod
-    def decode_data(message: bytes) -> Tuple[np.ndarray, int, float]:
+    def decode_data(message: bytes) -> Tuple[np.ndarray, int, float, np.ndarray]:
         touch = int.from_bytes(message[:4], 'little')
         distance = np.frombuffer(message[4:8], dtype=np.float32)[0]
-        dims = int.from_bytes(message[8:12], 'little'), int.from_bytes(message[12:16], 'little'), 3
-        array_received = np.frombuffer(message[16:], dtype=np.float32)
+        movement = np.frombuffer(message[8:56], dtype=np.int32)
+        dims = int.from_bytes(message[56:60], 'little'), int.from_bytes(message[60:64], 'little'), 3
+        array_received = np.frombuffer(message[64:], dtype=np.float32)
         array_received = array_received.reshape(dims)
         array_received = np.rot90(array_received)
-        return array_received, touch, distance
+        return array_received, touch, distance, movement
 
-    def step(self, action: int, random_move: bool) -> Tuple[np.ndarray, int, bool]:
+    def step(self, action: int, random_move: bool) -> Tuple[Tuple[np.ndarray, np.ndarray], int, bool]:
         selected_action = self.action_space.space[action]
         random_move = b'1' if random_move else b'0'
-        self.communicator.send_data(self.get_epoch_as_bytes() + self.encode_action(selected_action)+random_move)
-        observation, touch, distance = self.decode_data(self.communicator.get_data())
-
+        self.communicator.send_data(self.get_epoch_as_bytes() + self.encode_action(selected_action) + random_move)
+        observation, touch, distance, movement = self.decode_data(self.communicator.get_data())
         done = False
         if touch == 1:
             done = True
             self.ep = 0
             reward = self.TOUCH_REWARD
-        elif time.perf_counter() - self.episode_start > self.total_time:
-            done = True
-            self.ep = 0
-            reward = -self.MOVE_PENALTY
         elif distance < self.distance:
             reward = -self.MOVE_PENALTY / 3
+            if time.perf_counter() - self.episode_start > self.total_time:
+                done = True
+                self.ep = 0
         else:
             reward = -self.MOVE_PENALTY
+            if time.perf_counter() - self.episode_start > self.total_time:
+                done = True
+                self.ep = 0
         self.ep += 1
         self.distance = distance
-        return observation, reward, done
+        return (observation, movement), reward, done
 
     @staticmethod
     def encode_action(action: Tuple[int, int, int]) -> bytes:
@@ -100,16 +102,16 @@ class GameEnv:
             msg += str(item).encode()
         return msg
 
-    def reset(self) -> np.ndarray:
+    def reset(self) -> Tuple[np.ndarray, np.ndarray]:
         print(self.distance)
         self.communicator.send_data(self.get_epoch_as_bytes() + b'r')
         print('sent reset')
         self.episode_start = time.perf_counter()
-        observation, _, self.distance = self.decode_data(self.communicator.get_data())
+        observation, _, self.distance, movement = self.decode_data(self.communicator.get_data())
         print('Got first state')
-        time.sleep(.12)
+        time.sleep(.118)
         self.epoch += 1
-        return observation
+        return observation, movement
 
     def close(self) -> None:
         self.communicator.send_data(b'c')

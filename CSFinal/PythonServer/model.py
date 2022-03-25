@@ -5,7 +5,7 @@ import time
 
 from keras import layers
 from keras.callbacks import TensorBoard
-from keras.models import Sequential, load_model
+from keras.models import Sequential, load_model, Model
 from keras.optimizer_v2.adam import Adam
 import numpy as np
 import tensorflow as tf
@@ -17,7 +17,7 @@ print(tf.__version__)
 
 REPLAY_MEMORY_SIZE = 50_000
 MIN_REPLAY_MEMORY_SIZE = 1_000
-MODEL_NAME = 'fourth'
+MODEL_NAME = 'fifth'
 temp_name = MODEL_NAME
 
 # x = 1
@@ -26,7 +26,7 @@ temp_name = MODEL_NAME
 #     x += 1
 # MODEL_NAME = temp_name
 
-LOAD_MODEL = None  # 'models/first/1647893930____-1.00max__-33.92avg__-48.00min.model'
+LOAD_MODEL =  'models/fifth/1648185607____-4.67max__-14.57avg__-20.00min.model'
 
 MINIBACH_SIZE = 64
 DISCOUNT = 0.99
@@ -34,7 +34,7 @@ UPDATE_TARGET_EVERY = 5
 MIN_REWARD = -70
 EPISODES = 50_000
 
-epsilon = 1  # not a constant, going to be decayed
+epsilon = .5471  # not a constant, going to be decayed
 EPSILON_DECAY = 0.9999079008376686
 MIN_EPSILON = 0.001
 
@@ -94,24 +94,49 @@ class DQNAgent:
     def create_model(self):
         if LOAD_MODEL:
             model = load_model(LOAD_MODEL)
+            print('Model Loaded')
         else:
-            model = Sequential()
-            model.add(layers.Conv2D(filters=6, kernel_size=(5, 5), activation='relu', input_shape=(44, 44, 3)))
-            model.add(layers.Activation('relu'))
-            model.add(layers.MaxPooling2D())
-            model.add(layers.Dropout(0.05))
+            image_input = layers.Input(shape=(44, 44, 3))
+            movement_input = layers.Input(shape=(12,))
 
-            model.add(layers.Conv2D(filters=6, kernel_size=(5, 5), activation='relu'))
-            model.add(layers.Activation('relu'))
-            model.add(layers.MaxPooling2D())
-            model.add(layers.Dropout(0.05))
+            conv0 = layers.Conv2D(filters=6, kernel_size=(5, 5), activation='relu')(image_input)
+            relu0 = layers.Activation('relu')(conv0)
+            pool0 = layers.MaxPooling2D()(relu0)
+            drop0 = layers.Dropout(0.2)(pool0)
 
-            model.add(layers.Flatten())
-            model.add(layers.Dense(units=50, activation='relu'))
-            model.add(layers.Dense(units=20, activation='relu'))
-            model.add(layers.Dense(units=6, activation='linear'))
+            conv1 = layers.Conv2D(filters=6, kernel_size=(5, 5), activation='relu')(drop0)
+            relu1 = layers.Activation('relu')(conv1)
+            pool1 = layers.MaxPooling2D()(relu1)
+            drop1 = layers.Dropout(0.2)(pool1)
+            flat = layers.Flatten()(drop1)
 
+            concat = layers.Concatenate()([flat, movement_input])
+
+            dense0 = layers.Dense(units=100, activation='relu')(concat)
+            dense1 = layers.Dense(units=50, activation='relu')(dense0)
+            dense2 = layers.Dense(units=20, activation='relu')(dense1)
+            output = layers.Dense(units=6, activation='relu')(dense2)
+
+            model = Model(inputs=[image_input, movement_input], outputs=[output])
             model.compile(loss='mse', optimizer=Adam(learning_rate=0.001), metrics=['accuracy'])
+
+            # model = Sequential()
+            # model.add(layers.Conv2D(filters=6, kernel_size=(5, 5), activation='relu', input_shape=(44, 44, 3)))
+            # model.add(layers.Activation('relu'))
+            # model.add(layers.MaxPooling2D())
+            # model.add(layers.Dropout(0.05))
+            #
+            # model.add(layers.Conv2D(filters=6, kernel_size=(5, 5), activation='relu'))
+            # model.add(layers.Activation('relu'))
+            # model.add(layers.MaxPooling2D())
+            # model.add(layers.Dropout(0.05))
+            #
+            # model.add(layers.Flatten())
+            # model.add(layers.Dense(units=50, activation='relu'))
+            # model.add(layers.Dense(units=20, activation='relu'))
+            # model.add(layers.Dense(units=6, activation='linear'))
+            #
+            # model.compile(loss='mse', optimizer=Adam(learning_rate=0.001), metrics=['accuracy'])
         return model
 
     def update_replay_memory(self, transition):
@@ -119,21 +144,22 @@ class DQNAgent:
 
     def get_qs(self, state):
         # print(type(state),state.shape)
-        return self.model.predict(np.array([state]))[0]
+        return self.model.predict([np.array([state[0]]), np.array([state[1]])])[0]
 
     def train(self, terminal_state, step):
         if len(self.replay_memory) < MIN_REPLAY_MEMORY_SIZE:
-            time.sleep(.12)  # mimic time taken to train model
+            time.sleep(.118)  # mimic time taken to train model
             return
 
         minibatch = random.sample(self.replay_memory, MINIBACH_SIZE)
 
-        current_states = np.array([transition[0] for transition in minibatch])
+        current_states = [np.array([transition[0][0] for transition in minibatch]), np.array([transition[0][1] for transition in minibatch])]
         current_qs_list = self.model.predict(current_states)
 
-        new_current_states = np.array([transition[3] for transition in minibatch])
+        new_current_states = [np.array([transition[3][0] for transition in minibatch]), np.array([transition[3][1] for transition in minibatch])]
         future_qs_list = self.target_model.predict(new_current_states)
-        X = []
+        X_img = []
+        X_movement = []
         y = []
 
         for index, (current_state, action, reward, new_current_states, done) in enumerate(minibatch):
@@ -147,10 +173,11 @@ class DQNAgent:
 
             current_qs[action] = new_q
 
-            X.append(current_state)
+            X_img.append(current_state[0])
+            X_movement.append(current_state[1])
             y.append(current_qs)
 
-        self.model.fit(np.array(X), np.array(y), batch_size=MINIBACH_SIZE, verbose=0, shuffle=False, callbacks=[self.tensorboard] if terminal_state else None)
+        self.model.fit([np.array(X_img), np.array(X_movement)], np.array(y), batch_size=MINIBACH_SIZE, verbose=0, shuffle=False, callbacks=[self.tensorboard] if terminal_state else None)
 
         if terminal_state:
             self.target_update_counter += 1
@@ -173,8 +200,8 @@ def main():
         os.makedirs('models')
 
     agent = DQNAgent()
-
-    for episode in range(1, EPISODES + 1):
+    # times = deque(maxlen=120)
+    for episode in range(6551, EPISODES + 1):
         agent.tensorboard.step = episode
 
         episode_reward = 0
@@ -194,8 +221,8 @@ def main():
                 random_move = True
                 action = np.random.randint(0, env.ACTION_SPACE_SIZE)
 
-            new_state, reward, done = env.step(action,random_move)
-
+            new_state, reward, done = env.step(action, random_move)
+            print(reward)
             # Transform new continous state to new discrete state and count reward
             episode_reward += reward
 
@@ -205,11 +232,12 @@ def main():
 
             current_state = new_state
             n = time.perf_counter()
-            # print(n-s)
+            # if n-s < .15: times.append(n-s)
             s = n
             step += 1
             if step % 10 == 0:
                 print(step)
+                # print(sum(times)/len(times))
         print(f'Episode: {episode}\nSteps: {step}\nEp Reward: {episode_reward}\nEpsilon:{epsilon:0.4f}\n')
         # Append episode reward to a list and log stats (every given number of episodes)
         ep_rewards.append(episode_reward)
@@ -220,7 +248,7 @@ def main():
             agent.tensorboard.update_stats(reward_avg=average_reward, reward_min=min_reward, reward_max=max_reward, epsilon=epsilon)
 
             # Save model, but only when min reward is greater or equal a set value
-            if min_reward >= MIN_REWARD and episode % 250 == 0:
+            if min_reward >= MIN_REWARD and episode % 500 == 0:
                 agent.model.save(f'models/{MODEL_NAME}/{int(time.time())}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min.model')
 
         # Decay epsilon

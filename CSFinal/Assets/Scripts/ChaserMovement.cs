@@ -35,6 +35,8 @@ public class ChaserMovement : MonoBehaviour
     public SpriteRenderer spriteRenderer;
     public Sprite spriteSmart;
 
+    int[] movement = new int[6]; // [x=0,x>0,x<0,y=0,y>0,y<0]
+    EvaderMovement evaderMovement;
     System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
 
     void Start()
@@ -44,7 +46,7 @@ public class ChaserMovement : MonoBehaviour
         BoxCollider2D boxCollider2d = GetComponent<BoxCollider2D>();
         NNHandler nnInstance = GetComponent<NNHandler>();
         evader = GameObject.Find("Evader");
-
+        evaderMovement = evader.GetComponent<EvaderMovement>();
 
         SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
         Sprite spriteRandom = GetComponent<Sprite>();
@@ -95,9 +97,22 @@ public class ChaserMovement : MonoBehaviour
         return Vector3.Distance(transform.position, evader.transform.position);
     }
 
+    void update_movement()
+    {   // [x=0,x>0,x<0,y=0,y>0,y<0]
+
+        movement[0] = speed.x == 0 ? 1 : 0;
+        movement[1] = speed.x > 0 ? 1 : 0;
+        movement[2] = speed.x < 0 ? 1 : 0;
+        movement[3] = speed.y == 0 ? 1 : 0;
+        movement[4] = speed.y > 0 ? 1 : 0;
+        movement[5] = speed.y < 0 ? 1 : 0;
+    }
+
+
     // Update is called once per frame
     void Update()
     {
+
         if (randomMove)
         {
             spriteRenderer.sprite = spriteRandom;
@@ -117,7 +132,7 @@ public class ChaserMovement : MonoBehaviour
             if (messageReadyToSend)
             {
                 watch.Start();
-                nnInstance.SendData(touched, GetDist2Evader(), interpretData);
+                nnInstance.SendData(touched, GetDist2Evader(), movement, evaderMovement.movement, interpretData);
                 //Debug.Log("Sending Message");
                 //Debug.Log(step);
                 messageReadyToSend = false;
@@ -153,6 +168,7 @@ public class ChaserMovement : MonoBehaviour
             jump = false;
         }
         step++;
+        update_movement();
     }
 
     void FixedUpdate()
