@@ -222,7 +222,6 @@ def main():
                 action = np.random.randint(0, env.ACTION_SPACE_SIZE)
 
             new_state, reward, done = env.step(action, random_move)
-            print(reward)
             # Transform new continous state to new discrete state and count reward
             episode_reward += reward
 
