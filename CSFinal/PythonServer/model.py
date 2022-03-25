@@ -26,7 +26,7 @@ temp_name = MODEL_NAME
 #     x += 1
 # MODEL_NAME = temp_name
 
-LOAD_MODEL =  'models/fifth/1648185607____-4.67max__-14.57avg__-20.00min.model'
+LOAD_MODEL = None  # 'models/fifth/1648185607____-4.67max__-14.57avg__-20.00min.model'
 
 MINIBACH_SIZE = 64
 DISCOUNT = 0.99
@@ -34,7 +34,7 @@ UPDATE_TARGET_EVERY = 5
 MIN_REWARD = -70
 EPISODES = 50_000
 
-epsilon = .5471  # not a constant, going to be decayed
+epsilon = 1  # not a constant, going to be decayed
 EPSILON_DECAY = 0.9999079008376686
 MIN_EPSILON = 0.001
 
@@ -201,7 +201,7 @@ def main():
 
     agent = DQNAgent()
     # times = deque(maxlen=120)
-    for episode in range(6551, EPISODES + 1):
+    for episode in range(1, EPISODES + 1):
         agent.tensorboard.step = episode
 
         episode_reward = 0
