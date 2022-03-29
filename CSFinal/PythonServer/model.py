@@ -198,7 +198,7 @@ def main():
     global epsilon
     ep_rewards = [-80]
     agent = DQNAgent()
-    com = Communicator(6555)
+    com = Communicator(5555)
     env = GameEnv(com)
     random.seed(2)
     np.random.seed(2)
@@ -256,7 +256,7 @@ def main():
 
             # Save model, but only when min reward is greater or equal a set value
             if min_reward >= MIN_REWARD and episode % 1000 == 0:
-                agent.model.save(f'models/{MODEL_NAME}/{int(time.time())}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min.model')
+                agent.model.save(f'models/{MODEL_NAME}/episode_{episode}__epsilon_{epsilon}__time_{int(time.time())}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min.model')
 
         # Decay epsilon
         if epsilon > MIN_EPSILON:
