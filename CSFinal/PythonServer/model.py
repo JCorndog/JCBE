@@ -17,7 +17,7 @@ print(tf.__version__)
 
 REPLAY_MEMORY_SIZE = 50_000
 MIN_REPLAY_MEMORY_SIZE = 1_000
-MODEL_NAME = 'sixth'
+MODEL_NAME = 'seventh'
 temp_name = MODEL_NAME
 
 # x = 1
@@ -32,7 +32,7 @@ MINIBACH_SIZE = 64
 DISCOUNT = 0.99
 UPDATE_TARGET_EVERY = 5
 MIN_REWARD = -90
-EPISODES = 65_000
+EPISODES = 120_000
 
 epsilon = 1  # not a constant, going to be decayed
 EPSILON_DECAY = 0.9999306876841536
@@ -40,6 +40,12 @@ MIN_EPSILON = 0.001
 
 AGGREGATE_STATS_EVERY = 50
 
+gpus = tf.config.experimental.list_physical_devices('GPU')
+if gpus:
+    try:
+        tf.config.experimental.set_virtual_device_configuration(gpus[0], [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=int(1024*8/3))])
+    except RuntimeError as e:
+        print(e)
 
 # from https://pythonprogramming.net/deep-q-learning-dqn-reinforcement-learning-python-tutorial/
 class ModifiedTensorBoard(TensorBoard):
@@ -104,18 +110,19 @@ class DQNAgent:
             pool0 = layers.MaxPooling2D()(relu0)
             drop0 = layers.Dropout(0.2)(pool0)
 
-            conv1 = layers.Conv2D(filters=6, kernel_size=(5, 5), activation='relu')(drop0)
+            conv1 = layers.Conv2D(filters=16, kernel_size=(5, 5), activation='relu')(drop0)
             relu1 = layers.Activation('relu')(conv1)
             pool1 = layers.MaxPooling2D()(relu1)
             drop1 = layers.Dropout(0.2)(pool1)
             flat = layers.Flatten()(drop1)
 
-            concat = layers.Concatenate()([flat, movement_input])
-
-            dense0 = layers.Dense(units=100, activation='relu')(concat)
+            dense0 = layers.Dense(units=100, activation='relu')(flat)
             dense1 = layers.Dense(units=50, activation='relu')(dense0)
-            dense2 = layers.Dense(units=20, activation='relu')(dense1)
-            output = layers.Dense(units=6, activation='relu')(dense2)
+
+            concat = layers.Concatenate()([dense1, movement_input])
+            dense2 = layers.Dense(units=30, activation='relu')(concat)
+            dense3 = layers.Dense(units=20, activation='relu')(dense2)
+            output = layers.Dense(units=6, activation='relu')(dense3)
 
             model = Model(inputs=[image_input, movement_input], outputs=[output])
             model.compile(loss='mse', optimizer=Adam(learning_rate=0.001), metrics=['accuracy'])
