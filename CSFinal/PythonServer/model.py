@@ -115,14 +115,14 @@ class DQNAgent:
             pool1 = layers.MaxPooling2D()(relu1)
             drop1 = layers.Dropout(0.2)(pool1)
             flat = layers.Flatten()(drop1)
+            dense0 = layers.Dense(units=250, activation='relu')(flat)
+            dense1 = layers.Dense(units=100, activation='relu')(dense0)
+            dense2 = layers.Dense(units=50, activation='relu')(dense1)
 
-            dense0 = layers.Dense(units=100, activation='relu')(flat)
-            dense1 = layers.Dense(units=50, activation='relu')(dense0)
-
-            concat = layers.Concatenate()([dense1, movement_input])
-            dense2 = layers.Dense(units=30, activation='relu')(concat)
-            dense3 = layers.Dense(units=20, activation='relu')(dense2)
-            output = layers.Dense(units=6, activation='relu')(dense3)
+            concat = layers.Concatenate()([dense2, movement_input])
+            dense3 = layers.Dense(units=30, activation='relu')(concat)
+            dense4 = layers.Dense(units=20, activation='relu')(dense3)
+            output = layers.Dense(units=6, activation='relu')(dense4)
 
             model = Model(inputs=[image_input, movement_input], outputs=[output])
             model.compile(loss='mse', optimizer=Adam(learning_rate=0.001), metrics=['accuracy'])
@@ -199,7 +199,7 @@ def main():
     ep_rewards = [-80]
     agent = DQNAgent()
     com = Communicator(5555)
-    env = GameEnv(com)
+    env = GameEnv(com, total_time=10)
     random.seed(2)
     np.random.seed(2)
     tf.random.set_seed(2)
@@ -239,7 +239,7 @@ def main():
 
             current_state = new_state
             n = time.perf_counter()
-            # if n-s < .15: times.append(n-s)
+            # print(n-s)
             s = n
             step += 1
             if step % 10 == 0:
