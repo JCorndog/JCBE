@@ -26,14 +26,14 @@ class GameEnv:
     TOUCH_REWARD = 25
     MOVE_PENALTY = 1
 
-    def __init__(self, communicator: Communicator, message_format=None) -> None:
+    def __init__(self, communicator: Communicator, message_format=None, total_time = 9) -> None:
         self.action_space = Space()
         self.communicator = communicator
         communicator.get_data()
         self.message_format = message_format if message_format else self.DEFAULT_MESSAGE_FORMAT
         self.ACTION_SPACE_SIZE = self.action_space.n
         self.ep = 0
-        self.total_time = 3
+        self.total_time = total_time
         self.episode_start = time.perf_counter()
         self.epoch = 0
         self.distance = None
@@ -81,7 +81,7 @@ class GameEnv:
             self.ep = 0
             reward = self.TOUCH_REWARD
         elif distance < self.distance:
-            reward = -self.MOVE_PENALTY / 3
+            reward = -self.MOVE_PENALTY * 3/4
             if time.perf_counter() - self.episode_start > self.total_time:
                 done = True
                 self.ep = 0

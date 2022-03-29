@@ -39,6 +39,8 @@ public class ChaserMovement : MonoBehaviour
     EvaderMovement evaderMovement;
     System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
 
+    public bool ready = false;
+
     void Start()
     {
 
@@ -112,7 +114,10 @@ public class ChaserMovement : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
+        if (!ready)
+        {
+            return;
+        }
         if (randomMove)
         {
             spriteRenderer.sprite = spriteRandom;
@@ -173,6 +178,10 @@ public class ChaserMovement : MonoBehaviour
 
     void FixedUpdate()
     {
+        if (!ready)
+        {
+            return;
+        }
         timer--;
         if (timer <= 0)
         {

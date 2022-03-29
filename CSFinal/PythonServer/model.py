@@ -17,7 +17,7 @@ print(tf.__version__)
 
 REPLAY_MEMORY_SIZE = 50_000
 MIN_REPLAY_MEMORY_SIZE = 1_000
-MODEL_NAME = 'fifth'
+MODEL_NAME = 'sixth'
 temp_name = MODEL_NAME
 
 # x = 1
@@ -26,16 +26,16 @@ temp_name = MODEL_NAME
 #     x += 1
 # MODEL_NAME = temp_name
 
-LOAD_MODEL = None  # 'models/fifth/1648185607____-4.67max__-14.57avg__-20.00min.model'
+LOAD_MODEL = None  # 'models/fifth/1648297384____24.33max___18.58avg__-15.33min.model'
 
 MINIBACH_SIZE = 64
 DISCOUNT = 0.99
 UPDATE_TARGET_EVERY = 5
-MIN_REWARD = -70
-EPISODES = 50_000
+MIN_REWARD = -90
+EPISODES = 65_000
 
 epsilon = 1  # not a constant, going to be decayed
-EPSILON_DECAY = 0.9999079008376686
+EPSILON_DECAY = 0.9999306876841536
 MIN_EPSILON = 0.001
 
 AGGREGATE_STATS_EVERY = 50
@@ -247,7 +247,7 @@ def main():
             agent.tensorboard.update_stats(reward_avg=average_reward, reward_min=min_reward, reward_max=max_reward, epsilon=epsilon)
 
             # Save model, but only when min reward is greater or equal a set value
-            if min_reward >= MIN_REWARD and episode % 500 == 0:
+            if min_reward >= MIN_REWARD and episode % 1000 == 0:
                 agent.model.save(f'models/{MODEL_NAME}/{int(time.time())}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min.model')
 
         # Decay epsilon

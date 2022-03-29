@@ -23,6 +23,8 @@ public class EvaderMovement : MonoBehaviour
 
     public int[] movement = new int[6]; // [x=0,x>0,x<0,y=0,y>0,y<0]
 
+    public bool ready = false;
+
     void Start()
     {
         Rigidbody2D rigidbody2D = GetComponent<Rigidbody2D>();
@@ -44,6 +46,10 @@ public class EvaderMovement : MonoBehaviour
 
     void Update()
     {
+        if (!ready)
+        {
+            return;
+        }
         xDir = 0;
         //Input
         if (Input.GetKey(KeyCode.LeftArrow))
@@ -74,6 +80,10 @@ public class EvaderMovement : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
+        if (!ready)
+        {
+            return;
+        }
         grounded = IsGrounded(0.02f);
         animator.SetBool("grounded", grounded);
         if (jumped == true && jumpTimer > 0)
