@@ -190,7 +190,8 @@ class DQNAgent:
 def main():
     global epsilon
     ep_rewards = [-80]
-    com = Communicator()
+    agent = DQNAgent()
+    com = Communicator(6555)
     env = GameEnv(com)
     random.seed(2)
     np.random.seed(2)
@@ -199,7 +200,7 @@ def main():
     if not os.path.isdir('models'):
         os.makedirs('models')
 
-    agent = DQNAgent()
+
     # times = deque(maxlen=120)
     for episode in range(1, EPISODES + 1):
         agent.tensorboard.step = episode

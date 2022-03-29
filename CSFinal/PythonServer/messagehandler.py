@@ -77,9 +77,9 @@ class MessageHandler(threading.Thread):
 
 
 class Communicator:
-    def __init__(self, verbose: bool = False) -> None:
+    def __init__(self, port=5555, verbose: bool = False) -> None:
         self.verbose = verbose
-        self.message_handler = MessageHandler(verbose=verbose)
+        self.message_handler = MessageHandler(port=port, verbose=verbose)
         self.message_handler.daemon = True
         self.message_handler.start()
 
