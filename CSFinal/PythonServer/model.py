@@ -17,7 +17,7 @@ print(tf.__version__)
 
 REPLAY_MEMORY_SIZE = 50_000
 MIN_REPLAY_MEMORY_SIZE = 1_000
-MODEL_NAME = 'seventh'
+MODEL_NAME = 'eighth'
 temp_name = MODEL_NAME
 
 # x = 1
@@ -32,10 +32,10 @@ MINIBACH_SIZE = 64
 DISCOUNT = 0.99
 UPDATE_TARGET_EVERY = 5
 MIN_REWARD = -90
-EPISODES = 120_000
+EPISODES = 150_000
 
 epsilon = 1  # not a constant, going to be decayed
-EPSILON_DECAY = 0.9999445497629764
+EPSILON_DECAY = 0.9999537912556196
 MIN_EPSILON = 0.001
 
 AGGREGATE_STATS_EVERY = 50
@@ -198,7 +198,7 @@ def main():
     global epsilon
     ep_rewards = [-80]
     agent = DQNAgent()
-    com = Communicator(5555)
+    com = Communicator(6555)
     env = GameEnv(com, total_time=10)
     random.seed(2)
     np.random.seed(2)
