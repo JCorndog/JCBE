@@ -22,8 +22,9 @@ class Space:
 
 
 class GameEnv:
-    DEFAULT_MESSAGE_FORMAT = [('touched', 4, int), ('height', 4, int), ('width', 4, int), ('image', -1, np.float32)]
-    TOUCH_REWARD = 25
+    DEFAULT_MESSAGE_FORMAT = [('touched', 4, int), ('height', 4, int), ('width', 4, int), ('image', -1, np.float32)]  # TODO needs updated if used in the future
+    TOUCH_ENEMY_REWARD = 25
+    TOUCH_WALL_REWARD = -5
     MOVE_PENALTY = 1
 
     def __init__(self, communicator: Communicator, message_format=None, total_time = 9) -> None:
@@ -60,26 +61,28 @@ class GameEnv:
         return data
 
     @staticmethod
-    def decode_data(message: bytes) -> Tuple[np.ndarray, int, float, np.ndarray]:
-        touch = int.from_bytes(message[:4], 'little')
-        distance = np.frombuffer(message[4:8], dtype=np.float32)[0]
-        movement = np.frombuffer(message[8:56], dtype=np.int32)
-        dims = int.from_bytes(message[56:60], 'little'), int.from_bytes(message[60:64], 'little'), 3
-        array_received = np.frombuffer(message[64:], dtype=np.float32)
+    def decode_data(message: bytes) -> Tuple[np.ndarray, int, int, float, np.ndarray]:
+        touch_enemy = int.from_bytes(message[:4], 'little')
+        touch_wall = int.from_bytes(message[4:8], 'little')
+        distance = np.frombuffer(message[8:12], dtype=np.float32)[0]
+        movement = np.frombuffer(message[12:60], dtype=np.int32)
+        dims = int.from_bytes(message[60:64], 'little'), int.from_bytes(message[60:64], 'little'), 3
+        array_received = np.frombuffer(message[68:], dtype=np.float32)
         array_received = array_received.reshape(dims)
         array_received = np.rot90(array_received)
-        return array_received, touch, distance, movement
+        return array_received, touch_enemy, touch_wall, distance, movement
 
     def step(self, action: int, random_move: bool) -> Tuple[Tuple[np.ndarray, np.ndarray], int, bool]:
         selected_action = self.action_space.space[action]
         random_move = b'1' if random_move else b'0'
         self.communicator.send_data(self.get_epoch_as_bytes() + self.encode_action(selected_action) + random_move)
-        observation, touch, distance, movement = self.decode_data(self.communicator.get_data())
+        observation, touch_enemy, touch_wall, distance, movement = self.decode_data(self.communicator.get_data())
         done = False
-        if touch == 1:
+        if touch_enemy == 1:
             done = True
             self.ep = 0
-            reward = self.TOUCH_REWARD
+            reward = self.TOUCH_ENEMY_REWARD
+
         elif distance < self.distance:
             reward = -self.MOVE_PENALTY * 3/4
             if time.perf_counter() - self.episode_start > self.total_time:
@@ -90,6 +93,10 @@ class GameEnv:
             if time.perf_counter() - self.episode_start > self.total_time:
                 done = True
                 self.ep = 0
+
+        if touch_wall == 1:
+            reward = -self.TOUCH_WALL_REWARD
+
         self.ep += 1
         self.distance = distance
         return (observation, movement), reward, done
@@ -107,7 +114,7 @@ class GameEnv:
         self.communicator.send_data(self.get_epoch_as_bytes() + b'r')
         print('sent reset')
         self.episode_start = time.perf_counter()
-        observation, _, self.distance, movement = self.decode_data(self.communicator.get_data())
+        observation, _, _, self.distance, movement = self.decode_data(self.communicator.get_data())
         print('Got first state')
         time.sleep(.118)
         self.epoch += 1

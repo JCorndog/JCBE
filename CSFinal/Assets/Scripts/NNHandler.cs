@@ -13,7 +13,8 @@ public class NNHandler : MonoBehaviour
     private byte[] byteArray = null;
     public CommunicationClient client;
     public int[] dimensions= new int[2];
-    public int[] touchinga = new int[1];
+    public int[] touching_enemya = new int[1];
+    public int[] touching_walla = new int[1];
     public float[] distancea = new float[1];
 
     void Start()
@@ -64,26 +65,37 @@ public class NNHandler : MonoBehaviour
     {
         if (byteArray == null)
         {
-            byteArray = new byte[4 + 4 + 24 + 24 + 8 + pixels.Length * 4]; //  sizeof(int) + sizeof(float) + sizeof(int)*2 + input.Length*sizeof(float)
+            byteArray = new byte[4 + 4 + 4 + 24 + 24 + 8 + pixels.Length * 4]; //  sizeof(int) + sizeof(float) + sizeof(int)*2 + input.Length*sizeof(float)
         }                                                    // touching + dimensions + pixel data
-        Buffer.BlockCopy(touchinga, 0, byteArray, 0, 4);
-        Buffer.BlockCopy(distancea, 0, byteArray, 4, 4);
-        Buffer.BlockCopy(chaserMovement, 0, byteArray, 8, 24);
-        Buffer.BlockCopy(evaderMovement, 0, byteArray, 32, 24);
-        Buffer.BlockCopy(dimensions, 0, byteArray, 56, 8);
-        Buffer.BlockCopy(pixels, 0, byteArray, 4 + 4 + 24 + 24 + 8, pixels.Length * 4);
+        Buffer.BlockCopy(touching_enemya, 0, byteArray, 0, 4);
+        Buffer.BlockCopy(touching_walla, 0, byteArray, 4, 4);
+        Buffer.BlockCopy(distancea, 0, byteArray, 8, 4);
+        Buffer.BlockCopy(chaserMovement, 0, byteArray, 12, 24);
+        Buffer.BlockCopy(evaderMovement, 0, byteArray, 36, 24);
+        Buffer.BlockCopy(dimensions, 0, byteArray, 60, 8);
+        Buffer.BlockCopy(pixels, 0, byteArray, 4 + 4 + 4 + 24 + 24 + 8, pixels.Length * 4);
     }
 
-    public void SendData(bool touching, float distance, int[] chaserMovement, int[] evaderMovement, Action<byte[]> onOutputReceived)
+    public void SendData(bool touching_enemy, bool touching_wall, float distance, int[] chaserMovement, int[] evaderMovement, Action<byte[]> onOutputReceived)
     {   
-        if (touching)
+        if (touching_enemy)
         {
-            touchinga[0] = 1;
+            touching_enemya[0] = 1;
         }
         else
         {
-            touchinga[0] = 0;
+            touching_enemya[0] = 0;
         }
+
+        if (touching_wall)
+        {
+            touching_walla[0] = 1;
+        }
+        else
+        {
+            touching_walla[0] = 0;
+        }
+
         distancea[0] = distance;
         Texture2D image = GetTexture2D();
         float[] pixels = get_pixel_data(image);

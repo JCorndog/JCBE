@@ -26,7 +26,8 @@ public class ChaserMovement : MonoBehaviour
 
     bool messageReadyToSend = true;
     bool readyToReset = false;
-    bool touched = false;
+    bool touchedEnemy = false;
+    bool touchedWall = false;
     int epoch = 0;
     int step = 0;
     bool randomMove = false;
@@ -110,6 +111,11 @@ public class ChaserMovement : MonoBehaviour
         movement[5] = speed.y < 0 ? 1 : 0;
     }
 
+    void checkWallTouch()
+    {
+        touchedWall = false;
+    }
+
 
     // Update is called once per frame
     void Update()
@@ -126,6 +132,7 @@ public class ChaserMovement : MonoBehaviour
         {
             spriteRenderer.sprite = spriteSmart;
         }
+
         if (readyToReset)
         {
             Debug.Log("Reseting");
@@ -136,8 +143,9 @@ public class ChaserMovement : MonoBehaviour
         {
             if (messageReadyToSend)
             {
+                checkWallTouch();
+                nnInstance.SendData(touchedEnemy, touchedWall, GetDist2Evader(), movement, evaderMovement.movement, interpretData);
                 watch.Start();
-                nnInstance.SendData(touched, GetDist2Evader(), movement, evaderMovement.movement, interpretData);
                 //Debug.Log("Sending Message");
                 //Debug.Log(step);
                 messageReadyToSend = false;
@@ -240,7 +248,7 @@ public class ChaserMovement : MonoBehaviour
     {
         if (other.gameObject.tag == "Evader")
         {
-            touched = true;
+            touchedEnemy = true;
         }
     }
 }
