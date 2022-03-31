@@ -1,43 +1,52 @@
-import random
-import time
 from collections import deque
 import os
+import random
+import subprocess
+import time
 
-import tensorflow as tf
 from keras import layers
 from keras.callbacks import TensorBoard
-from keras.models import Sequential
+from keras.models import Model, load_model
 from keras.optimizer_v2.adam import Adam
 import numpy as np
+import tensorflow as tf
 
 from envs import GameEnv
 from messagehandler import Communicator
+from utils import get_args, load_config, load_model_details, set_shutdown_actions
 
-print(tf.__version__)
+args = get_args()
+# print(tf.__version__)
 
-REPLAY_MEMORY_SIZE = 50_000
-MIN_REPLAY_MEMORY_SIZE = 1_000
-MODEL_NAME = 'first'
-temp_name = MODEL_NAME
+cfg = load_config(args.cfg_file)
 
-x = 1
-while os.path.isdir('models/' + temp_name):
-    temp_name = MODEL_NAME + str(x)
-    x += 1
-MODEL_NAME = temp_name
+print(cfg)
 
+REPLAY_MEMORY_SIZE = cfg['REPLAY_MEMORY_SIZE']
+MIN_REPLAY_MEMORY_SIZE = cfg['MIN_REPLAY_MEMORY_SIZE']
+MODEL_NAME = cfg['MODEL_NAME']
 
-MINIBACH_SIZE = 64
-DISCOUNT = 0.99
-UPDATE_TARGET_EVERY = 5
-MIN_REWARD = -200
-EPISODES = 10000
+MINIBACH_SIZE = cfg['MINIBACH_SIZE']
+DISCOUNT = cfg['DISCOUNT']
+UPDATE_TARGET_EVERY = cfg['UPDATE_TARGET_EVERY']
+MIN_REWARD = cfg['MIN_REWARD']
+EPISODES = cfg['EPISODES']
 
-epsilon = 1  # not a constant, going to be decayed
-EPSILON_DECAY = 0.9994703085993939
-MIN_EPSILON = 0.001
+epsilon = cfg['epsilon']  # not a constant, going to be decayed
+EPSILON_DECAY = cfg['EPSILON_DECAY']
+MIN_EPSILON = cfg['MIN_EPSILON']
 
-AGGREGATE_STATS_EVERY = 25
+AGGREGATE_STATS_EVERY = cfg['AGGREGATE_STATS_EVERY']
+SAVE_EVERY = cfg['SAVE_EVERY']
+
+LOAD_MODEL, start_episode, epsilon = load_model_details(MODEL_NAME, epsilon)
+
+gpus = tf.config.experimental.list_physical_devices('GPU')
+if gpus:
+    try:
+        tf.config.experimental.set_virtual_device_configuration(gpus[0], [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=int(1024 * 6 / args.num_sess))])
+    except RuntimeError as e:
+        print(e)
 
 
 # from https://pythonprogramming.net/deep-q-learning-dqn-reinforcement-learning-python-tutorial/
@@ -91,23 +100,34 @@ class DQNAgent:
         self.target_update_counter = 0
 
     def create_model(self):
-        model = Sequential()
-        model.add(layers.Conv2D(filters=6, kernel_size=(5, 5), activation='relu', input_shape=(44, 44, 3)))
-        model.add(layers.Activation('relu'))
-        model.add(layers.MaxPooling2D())
-        model.add(layers.Dropout(0.1))
+        if LOAD_MODEL:
+            model = load_model(LOAD_MODEL)
+            print('Model Loaded')
+        else:
+            image_input = layers.Input(shape=(44, 44, 3))
+            movement_input = layers.Input(shape=(12,))
 
-        model.add(layers.Conv2D(filters=16, kernel_size=(5, 5), activation='relu'))
-        model.add(layers.Activation('relu'))
-        model.add(layers.MaxPooling2D())
-        model.add(layers.Dropout(0.1))
+            conv0 = layers.Conv2D(filters=6, kernel_size=(5, 5), activation='relu')(image_input)
+            relu0 = layers.Activation('relu')(conv0)
+            pool0 = layers.MaxPooling2D()(relu0)
+            drop0 = layers.Dropout(0.2)(pool0)
 
-        model.add(layers.Flatten())
-        model.add(layers.Dense(units=50, activation='relu'))
-        model.add(layers.Dense(units=20, activation='relu'))
-        model.add(layers.Dense(units=6, activation='softmax'))
+            conv1 = layers.Conv2D(filters=16, kernel_size=(5, 5), activation='relu')(drop0)
+            relu1 = layers.Activation('relu')(conv1)
+            pool1 = layers.MaxPooling2D()(relu1)
+            drop1 = layers.Dropout(0.2)(pool1)
+            flat = layers.Flatten()(drop1)
+            dense0 = layers.Dense(units=250, activation='relu')(flat)
+            dense1 = layers.Dense(units=100, activation='relu')(dense0)
+            dense2 = layers.Dense(units=50, activation='relu')(dense1)
 
-        model.compile(loss='mse', optimizer=Adam(learning_rate=0.001), metrics=['accuracy'])
+            concat = layers.Concatenate()([dense2, movement_input])
+            dense3 = layers.Dense(units=30, activation='relu')(concat)
+            dense4 = layers.Dense(units=20, activation='relu')(dense3)
+            output = layers.Dense(units=6, activation='relu')(dense4)
+
+            model = Model(inputs=[image_input, movement_input], outputs=[output])
+            model.compile(loss='mse', optimizer=Adam(learning_rate=0.001), metrics=['accuracy'])
         return model
 
     def update_replay_memory(self, transition):
@@ -115,21 +135,22 @@ class DQNAgent:
 
     def get_qs(self, state):
         # print(type(state),state.shape)
-        return self.model.predict(np.array([state]))[0]
+        return self.model.predict([np.array([state[0]]), np.array([state[1]])])[0]
 
     def train(self, terminal_state, step):
         if len(self.replay_memory) < MIN_REPLAY_MEMORY_SIZE:
-            time.sleep(.12)  # mimic time taken to train model
+            time.sleep(.118)  # mimic time taken to train model
             return
 
         minibatch = random.sample(self.replay_memory, MINIBACH_SIZE)
 
-        current_states = np.array([transition[0] for transition in minibatch])
+        current_states = [np.array([transition[0][0] for transition in minibatch]), np.array([transition[0][1] for transition in minibatch])]
         current_qs_list = self.model.predict(current_states)
 
-        new_current_states = np.array([transition[3] for transition in minibatch])
+        new_current_states = [np.array([transition[3][0] for transition in minibatch]), np.array([transition[3][1] for transition in minibatch])]
         future_qs_list = self.target_model.predict(new_current_states)
-        X = []
+        X_img = []
+        X_movement = []
         y = []
 
         for index, (current_state, action, reward, new_current_states, done) in enumerate(minibatch):
@@ -143,10 +164,11 @@ class DQNAgent:
 
             current_qs[action] = new_q
 
-            X.append(current_state)
+            X_img.append(current_state[0])
+            X_movement.append(current_state[1])
             y.append(current_qs)
 
-        self.model.fit(np.array(X), np.array(y), batch_size=MINIBACH_SIZE, verbose=0, shuffle=False, callbacks=[self.tensorboard] if terminal_state else None)
+        self.model.fit([np.array(X_img), np.array(X_movement)], np.array(y), batch_size=MINIBACH_SIZE, verbose=0, shuffle=False, callbacks=[self.tensorboard] if terminal_state else None)
 
         if terminal_state:
             self.target_update_counter += 1
@@ -158,9 +180,12 @@ class DQNAgent:
 
 def main():
     global epsilon
-    ep_rewards = [-200]
-    com = Communicator()
-    env = GameEnv(com)
+    ep_rewards = [-80]
+    agent = DQNAgent()
+    game_proc = subprocess.Popen(['..\\builds\\all_ports\\CSFinal.exe', str(args.port)])  # launch game with correct port num
+    # set_shutdown_actions([lambda: game_proc.kill()])
+    com = Communicator(args.port)
+    env = GameEnv(com, total_time=10)
     random.seed(2)
     np.random.seed(2)
     tf.random.set_seed(2)
@@ -168,9 +193,7 @@ def main():
     if not os.path.isdir('models'):
         os.makedirs('models')
 
-    agent = DQNAgent()
-
-    for episode in range(1, EPISODES + 1):
+    for episode in range(start_episode, EPISODES + 1):
         agent.tensorboard.step = episode
 
         episode_reward = 0
@@ -184,12 +207,13 @@ def main():
             if np.random.random() > epsilon:
                 # Get action from Q table
                 action = np.argmax(agent.get_qs(current_state))
+                random_move = False
             else:
                 # Get random action
+                random_move = True
                 action = np.random.randint(0, env.ACTION_SPACE_SIZE)
 
-            new_state, reward, done = env.step(action)
-
+            new_state, reward, done = env.step(action, random_move)
             # Transform new continous state to new discrete state and count reward
             episode_reward += reward
 
@@ -204,6 +228,7 @@ def main():
             step += 1
             if step % 10 == 0:
                 print(step)
+                # print(sum(times)/len(times))
         print(f'Episode: {episode}\nSteps: {step}\nEp Reward: {episode_reward}\nEpsilon:{epsilon:0.4f}\n')
         # Append episode reward to a list and log stats (every given number of episodes)
         ep_rewards.append(episode_reward)
@@ -214,14 +239,14 @@ def main():
             agent.tensorboard.update_stats(reward_avg=average_reward, reward_min=min_reward, reward_max=max_reward, epsilon=epsilon)
 
             # Save model, but only when min reward is greater or equal a set value
-            if min_reward >= MIN_REWARD:
-                agent.model.save(f'models/{MODEL_NAME}/{int(time.time())}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min.model')
+            if min_reward >= MIN_REWARD and episode % SAVE_EVERY == 0:
+                agent.model.save(f'models/{MODEL_NAME}/episode_{episode}__epsilon_{epsilon}__time_{int(time.time())}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min.model')
 
         # Decay epsilon
         if epsilon > MIN_EPSILON:
             epsilon *= EPSILON_DECAY
             epsilon = max(MIN_EPSILON, epsilon)
-
+    game_proc.kill()
 
 if __name__ == '__main__':
     main()

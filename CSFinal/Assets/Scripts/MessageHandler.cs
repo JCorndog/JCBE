@@ -3,7 +3,6 @@ using AsyncIO;
 using NetMQ;
 using NetMQ.Sockets;
 using UnityEngine;
-using UnityEngine;
 using System.Collections;
 //new
 using System.Diagnostics;
@@ -14,14 +13,23 @@ public class MessageHandler : RunAbleThread
     private Action<byte[]> onOutputReceived;
     private Action<Exception> onFail;
 
+    private string portNum = "6555";
     
     protected override void Run()
     {
+        /*var args = System.Environment.GetCommandLineArgs();
+        UnityEngine.Debug.Log(args.Length);
+        if (args.Length > 1)
+        {
+            this.portNum = args[1];
+        }*/
+
         ForceDotNet.Force(); // this line is needed to prevent unity freeze after one use, not sure why yet
         using (RequestSocket client = new RequestSocket())
         {
             this.client = client;
-            client.Connect("tcp://localhost:5555");
+            this.portNum = this.tryGetPortNum();
+            client.Connect("tcp://localhost:"+this.portNum);
 
             while (Running)
             {
@@ -47,6 +55,20 @@ public class MessageHandler : RunAbleThread
         }
 
         NetMQConfig.Cleanup(); // this line is needed to prevent unity freeze after one use, not sure why yet
+    }
+
+    private string tryGetPortNum()
+    {
+        var args = System.Environment.GetCommandLineArgs();
+        int tmp = 0;
+        if (args.Length > 1)
+        {
+            if (int.TryParse(args[1], out tmp))
+            {
+                return args[1];
+            }
+        }
+        return this.portNum;
     }
 
     public void SendInput(float[] input)

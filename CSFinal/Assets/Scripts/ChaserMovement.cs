@@ -19,23 +19,43 @@ public class ChaserMovement : MonoBehaviour
     public BoxCollider2D boxCollider2d;
     public Rigidbody2D rigidbody2D;
     public NNHandler nnInstance;
+    public GameObject evader;
     bool left = false;
     bool jump = false;
     bool right = false;
 
     bool messageReadyToSend = true;
     bool readyToReset = false;
-    bool touched = false;
+    bool touchedEnemy = false;
+    bool touchedWall = false;
     int epoch = 0;
     int step = 0;
+    bool randomMove = false;
 
+    public Sprite spriteRandom;
+    public SpriteRenderer spriteRenderer;
+    public Sprite spriteSmart;
+
+    int[] movement = new int[6]; // [x=0,x>0,x<0,y=0,y>0,y<0]
+    EvaderMovement evaderMovement;
     System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
+
+    public bool ready = false;
 
     void Start()
     {
+
         Rigidbody2D rigidbody2D = GetComponent<Rigidbody2D>();
         BoxCollider2D boxCollider2d = GetComponent<BoxCollider2D>();
         NNHandler nnInstance = GetComponent<NNHandler>();
+        evader = GameObject.Find("Evader");
+        evaderMovement = evader.GetComponent<EvaderMovement>();
+
+        SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
+        Sprite spriteRandom = GetComponent<Sprite>();
+        Sprite spriteSmart = GetComponent<Sprite>();
+
+
     }
 
     void interpretData(byte[] message)
@@ -51,6 +71,14 @@ public class ChaserMovement : MonoBehaviour
             left = (char)message[5] == '1';
             jump = (char)message[6] == '1';
             right = (char)message[7] == '1';
+            if ((char)message[8] == '1')
+            {
+                randomMove = true;
+            }
+            else
+            {
+                randomMove = false;
+            }
         }
         else if(flag == 'r')
         {
@@ -67,9 +95,44 @@ public class ChaserMovement : MonoBehaviour
 
     }
 
+    float GetDist2Evader()
+    {
+        return Vector3.Distance(transform.position, evader.transform.position);
+    }
+
+    void update_movement()
+    {   // [x=0,x>0,x<0,y=0,y>0,y<0]
+
+        movement[0] = speed.x == 0 ? 1 : 0;
+        movement[1] = speed.x > 0 ? 1 : 0;
+        movement[2] = speed.x < 0 ? 1 : 0;
+        movement[3] = speed.y == 0 ? 1 : 0;
+        movement[4] = speed.y > 0 ? 1 : 0;
+        movement[5] = speed.y < 0 ? 1 : 0;
+    }
+
+    void checkWallTouch()
+    {
+        touchedWall = false;
+    }
+
+
     // Update is called once per frame
     void Update()
     {
+        if (!ready)
+        {
+            return;
+        }
+        if (randomMove)
+        {
+            spriteRenderer.sprite = spriteRandom;
+        }
+        else
+        {
+            spriteRenderer.sprite = spriteSmart;
+        }
+
         if (readyToReset)
         {
             Debug.Log("Reseting");
@@ -80,8 +143,9 @@ public class ChaserMovement : MonoBehaviour
         {
             if (messageReadyToSend)
             {
+                checkWallTouch();
+                nnInstance.SendData(touchedEnemy, touchedWall, GetDist2Evader(), movement, evaderMovement.movement, interpretData);
                 watch.Start();
-                nnInstance.SendData(touched, interpretData);
                 //Debug.Log("Sending Message");
                 //Debug.Log(step);
                 messageReadyToSend = false;
@@ -117,10 +181,15 @@ public class ChaserMovement : MonoBehaviour
             jump = false;
         }
         step++;
+        update_movement();
     }
 
     void FixedUpdate()
     {
+        if (!ready)
+        {
+            return;
+        }
         timer--;
         if (timer <= 0)
         {
@@ -179,7 +248,7 @@ public class ChaserMovement : MonoBehaviour
     {
         if (other.gameObject.tag == "Evader")
         {
-            touched = true;
+            touchedEnemy = true;
         }
     }
 }
