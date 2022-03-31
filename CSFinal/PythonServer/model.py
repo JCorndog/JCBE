@@ -2,6 +2,9 @@ from collections import deque
 import os
 import random
 import time
+import re
+import argparse
+import subprocess
 
 from keras import layers
 from keras.callbacks import TensorBoard
@@ -9,43 +12,64 @@ from keras.models import Sequential, load_model, Model
 from keras.optimizer_v2.adam import Adam
 import numpy as np
 import tensorflow as tf
+import yaml
 
 from envs import GameEnv
 from messagehandler import Communicator
 
-print(tf.__version__)
 
-REPLAY_MEMORY_SIZE = 50_000
-MIN_REPLAY_MEMORY_SIZE = 1_000
-MODEL_NAME = 'eighth'
-temp_name = MODEL_NAME
+def get_most_recent_dir(path):
+    all_subdirs = [os.path.join(path, d) for d in os.listdir(path) if os.path.isdir(os.path.join(path, d))]
+    latest_subdir = max(all_subdirs, key=os.path.getmtime)
+    return latest_subdir
 
-# x = 1
-# while os.path.isdir('models/' + temp_name):
-#     temp_name = MODEL_NAME + str(x)
-#     x += 1
-# MODEL_NAME = temp_name
 
-LOAD_MODEL = None  # 'models/fifth/1648297384____24.33max___18.58avg__-15.33min.model'
+parser = argparse.ArgumentParser()
+parser.add_argument('--cfg_file', type=str, help='Path to the config file', required=True)
+parser.add_argument('--port', type=int, help='Connection port', default=5555)
+parser.add_argument('--num_sess', type=int, help='Connection port', default=1)
+args = parser.parse_args()
+# print(tf.__version__)
 
-MINIBACH_SIZE = 64
-DISCOUNT = 0.99
-UPDATE_TARGET_EVERY = 5
-MIN_REWARD = -90
-EPISODES = 150_000
+with open(args.cfg_file, 'r') as infile:
+    cfg = yaml.load(infile, yaml.Loader)
 
-epsilon = 1  # not a constant, going to be decayed
-EPSILON_DECAY = 0.9999537912556196
-MIN_EPSILON = 0.001
+print(cfg)
 
-AGGREGATE_STATS_EVERY = 50
+REPLAY_MEMORY_SIZE = cfg['REPLAY_MEMORY_SIZE']
+MIN_REPLAY_MEMORY_SIZE = cfg['MIN_REPLAY_MEMORY_SIZE']
+MODEL_NAME = cfg['MODEL_NAME']
+
+MINIBACH_SIZE = cfg['MINIBACH_SIZE']
+DISCOUNT = cfg['DISCOUNT']
+UPDATE_TARGET_EVERY = cfg['UPDATE_TARGET_EVERY']
+MIN_REWARD = cfg['MIN_REWARD']
+EPISODES = cfg['EPISODES']
+
+epsilon = cfg['epsilon']  # not a constant, going to be decayed
+EPSILON_DECAY = cfg['EPSILON_DECAY']
+MIN_EPSILON = cfg['MIN_EPSILON']
+
+AGGREGATE_STATS_EVERY = cfg['AGGREGATE_STATS_EVERY']
+SAVE_EVERY = cfg['SAVE_EVERY']
+
+if os.path.isdir(os.path.join('models', MODEL_NAME)):
+    load_dir = get_most_recent_dir(os.path.join('models', MODEL_NAME))
+    LOAD_MODEL = load_dir
+    start_episode = int(re.findall('episode_(.*?)__', os.path.split(load_dir)[1])[0])
+    epsilon = float(re.findall('epsilon_(.*?)__', os.path.split(load_dir)[1])[0])
+    print(LOAD_MODEL, epsilon, start_episode)
+else:
+    LOAD_MODEL = None
+    start_episode = 1
 
 gpus = tf.config.experimental.list_physical_devices('GPU')
 if gpus:
     try:
-        tf.config.experimental.set_virtual_device_configuration(gpus[0], [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=int(1024*8/3))])
+        tf.config.experimental.set_virtual_device_configuration(gpus[0], [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=int(1024 * 6 / args.num_sess))])
     except RuntimeError as e:
         print(e)
+
 
 # from https://pythonprogramming.net/deep-q-learning-dqn-reinforcement-learning-python-tutorial/
 class ModifiedTensorBoard(TensorBoard):
@@ -126,24 +150,6 @@ class DQNAgent:
 
             model = Model(inputs=[image_input, movement_input], outputs=[output])
             model.compile(loss='mse', optimizer=Adam(learning_rate=0.001), metrics=['accuracy'])
-
-            # model = Sequential()
-            # model.add(layers.Conv2D(filters=6, kernel_size=(5, 5), activation='relu', input_shape=(44, 44, 3)))
-            # model.add(layers.Activation('relu'))
-            # model.add(layers.MaxPooling2D())
-            # model.add(layers.Dropout(0.05))
-            #
-            # model.add(layers.Conv2D(filters=6, kernel_size=(5, 5), activation='relu'))
-            # model.add(layers.Activation('relu'))
-            # model.add(layers.MaxPooling2D())
-            # model.add(layers.Dropout(0.05))
-            #
-            # model.add(layers.Flatten())
-            # model.add(layers.Dense(units=50, activation='relu'))
-            # model.add(layers.Dense(units=20, activation='relu'))
-            # model.add(layers.Dense(units=6, activation='linear'))
-            #
-            # model.compile(loss='mse', optimizer=Adam(learning_rate=0.001), metrics=['accuracy'])
         return model
 
     def update_replay_memory(self, transition):
@@ -198,7 +204,8 @@ def main():
     global epsilon
     ep_rewards = [-80]
     agent = DQNAgent()
-    com = Communicator(6555)
+    game_proc = subprocess.Popen(['..\\builds\\all_ports\\CSFinal.exe',str(args.port)])  # launch game with correct port num
+    com = Communicator(args.port)
     env = GameEnv(com, total_time=10)
     random.seed(2)
     np.random.seed(2)
@@ -207,9 +214,7 @@ def main():
     if not os.path.isdir('models'):
         os.makedirs('models')
 
-
-    # times = deque(maxlen=120)
-    for episode in range(1, EPISODES + 1):
+    for episode in range(start_episode, EPISODES + 1):
         agent.tensorboard.step = episode
 
         episode_reward = 0
@@ -255,14 +260,14 @@ def main():
             agent.tensorboard.update_stats(reward_avg=average_reward, reward_min=min_reward, reward_max=max_reward, epsilon=epsilon)
 
             # Save model, but only when min reward is greater or equal a set value
-            if min_reward >= MIN_REWARD and episode % 1000 == 0:
+            if min_reward >= MIN_REWARD and episode % SAVE_EVERY == 0:
                 agent.model.save(f'models/{MODEL_NAME}/episode_{episode}__epsilon_{epsilon}__time_{int(time.time())}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min.model')
 
         # Decay epsilon
         if epsilon > MIN_EPSILON:
             epsilon *= EPSILON_DECAY
             epsilon = max(MIN_EPSILON, epsilon)
-
+    game_proc.kill()
 
 if __name__ == '__main__':
     main()
