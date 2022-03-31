@@ -124,7 +124,7 @@ class DQNAgent:
             concat = layers.Concatenate()([dense2, movement_input])
             dense3 = layers.Dense(units=30, activation='relu')(concat)
             dense4 = layers.Dense(units=20, activation='relu')(dense3)
-            output = layers.Dense(units=6, activation='relu')(dense4)
+            output = layers.Dense(units=6, activation='linear')(dense4)
 
             model = Model(inputs=[image_input, movement_input], outputs=[output])
             model.compile(loss='mse', optimizer=Adam(learning_rate=0.001), metrics=['accuracy'])
