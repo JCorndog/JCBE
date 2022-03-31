@@ -113,7 +113,23 @@ public class ChaserMovement : MonoBehaviour
 
     void checkWallTouch()
     {
-        touchedWall = false;
+        //573.5 right
+        //554.5 left
+        Vector3 vec = transform.position;
+        if (vec.x > 572.5 && IsHittingRightWall())
+        {
+            touchedWall = true;
+            Debug.Log("Hit wall");
+        }
+        else if (vec.x < 555.5 && IsHittingLeftWall())
+        {
+            touchedWall = true;
+            Debug.Log("Hit wall");
+        }
+        else
+        {
+            touchedWall = false;
+        }
     }
 
 
