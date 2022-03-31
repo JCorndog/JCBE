@@ -31,6 +31,7 @@ DISCOUNT = cfg['DISCOUNT']
 UPDATE_TARGET_EVERY = cfg['UPDATE_TARGET_EVERY']
 MIN_REWARD = cfg['MIN_REWARD']
 EPISODES = cfg['EPISODES']
+EPISODE_LENGTH = cfg['EPISODE_LENGTH']
 
 epsilon = cfg['epsilon']  # not a constant, going to be decayed
 EPSILON_DECAY = cfg['EPSILON_DECAY']
@@ -185,7 +186,7 @@ def main():
     game_proc = subprocess.Popen(['..\\builds\\all_ports\\CSFinal.exe', str(args.port)])  # launch game with correct port num
     # set_shutdown_actions([lambda: game_proc.kill()])
     com = Communicator(args.port)
-    env = GameEnv(com, total_time=10)
+    env = GameEnv(com, total_time=EPISODE_LENGTH)
     random.seed(2)
     np.random.seed(2)
     tf.random.set_seed(2)
