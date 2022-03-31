@@ -65,7 +65,12 @@ class MessageHandler(threading.Thread):
     def get_message(self) -> Tuple[Optional[bytes], Optional[Exception]]:
         if self.mode == SendMode.SENDING:
             return None, Exception('Data needs to be sent before any data can be received')
-        msg = self.incoming_message_queue.get(block=True)
+        msg = None
+        while not msg:
+            try:
+                msg = self.incoming_message_queue.get(block=True, timeout=.1)
+            except queue.Empty:
+                pass
         self.mode = SendMode.SENDING
         return msg, None
 
