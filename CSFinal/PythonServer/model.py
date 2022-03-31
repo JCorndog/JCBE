@@ -183,7 +183,7 @@ def main():
     ep_rewards = [-80]
     agent = DQNAgent()
     game_proc = subprocess.Popen(['..\\builds\\all_ports\\CSFinal.exe', str(args.port)])  # launch game with correct port num
-    set_shutdown_actions([lambda: game_proc.kill()])
+    # set_shutdown_actions([lambda: game_proc.kill()])
     com = Communicator(args.port)
     env = GameEnv(com, total_time=10)
     random.seed(2)
@@ -246,7 +246,7 @@ def main():
         if epsilon > MIN_EPSILON:
             epsilon *= EPSILON_DECAY
             epsilon = max(MIN_EPSILON, epsilon)
-
+    game_proc.kill()
 
 if __name__ == '__main__':
     main()
