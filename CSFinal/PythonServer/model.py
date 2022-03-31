@@ -1,38 +1,24 @@
 from collections import deque
 import os
 import random
-import time
-import re
-import argparse
 import subprocess
+import time
 
 from keras import layers
 from keras.callbacks import TensorBoard
-from keras.models import Sequential, load_model, Model
+from keras.models import Model, load_model
 from keras.optimizer_v2.adam import Adam
 import numpy as np
 import tensorflow as tf
-import yaml
 
 from envs import GameEnv
 from messagehandler import Communicator
+from utils import get_args, load_config, load_model_details, set_shutdown_actions
 
-
-def get_most_recent_dir(path):
-    all_subdirs = [os.path.join(path, d) for d in os.listdir(path) if os.path.isdir(os.path.join(path, d))]
-    latest_subdir = max(all_subdirs, key=os.path.getmtime)
-    return latest_subdir
-
-
-parser = argparse.ArgumentParser()
-parser.add_argument('--cfg_file', type=str, help='Path to the config file', required=True)
-parser.add_argument('--port', type=int, help='Connection port', default=5555)
-parser.add_argument('--num_sess', type=int, help='Connection port', default=1)
-args = parser.parse_args()
+args = get_args()
 # print(tf.__version__)
 
-with open(args.cfg_file, 'r') as infile:
-    cfg = yaml.load(infile, yaml.Loader)
+cfg = load_config(args.cfg_file)
 
 print(cfg)
 
@@ -53,15 +39,7 @@ MIN_EPSILON = cfg['MIN_EPSILON']
 AGGREGATE_STATS_EVERY = cfg['AGGREGATE_STATS_EVERY']
 SAVE_EVERY = cfg['SAVE_EVERY']
 
-if os.path.isdir(os.path.join('models', MODEL_NAME)):
-    load_dir = get_most_recent_dir(os.path.join('models', MODEL_NAME))
-    LOAD_MODEL = load_dir
-    start_episode = int(re.findall('episode_(.*?)__', os.path.split(load_dir)[1])[0])
-    epsilon = float(re.findall('epsilon_(.*?)__', os.path.split(load_dir)[1])[0])
-    print(LOAD_MODEL, epsilon, start_episode)
-else:
-    LOAD_MODEL = None
-    start_episode = 1
+LOAD_MODEL, start_episode, epsilon = load_model_details(MODEL_NAME, epsilon)
 
 gpus = tf.config.experimental.list_physical_devices('GPU')
 if gpus:
@@ -204,7 +182,8 @@ def main():
     global epsilon
     ep_rewards = [-80]
     agent = DQNAgent()
-    game_proc = subprocess.Popen(['..\\builds\\all_ports\\CSFinal.exe',str(args.port)])  # launch game with correct port num
+    game_proc = subprocess.Popen(['..\\builds\\all_ports\\CSFinal.exe', str(args.port)])  # launch game with correct port num
+    set_shutdown_actions([lambda: game_proc.kill()])
     com = Communicator(args.port)
     env = GameEnv(com, total_time=10)
     random.seed(2)
@@ -267,7 +246,7 @@ def main():
         if epsilon > MIN_EPSILON:
             epsilon *= EPSILON_DECAY
             epsilon = max(MIN_EPSILON, epsilon)
-    game_proc.kill()
+
 
 if __name__ == '__main__':
     main()
