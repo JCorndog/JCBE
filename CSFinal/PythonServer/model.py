@@ -184,7 +184,7 @@ def main():
     ep_rewards = [-80]
     agent = DQNAgent()
     game_proc = subprocess.Popen(['..\\builds\\all_ports\\CSFinal.exe', str(args.port)])  # launch game with correct port num
-    # set_shutdown_actions([lambda: game_proc.kill()])
+    set_shutdown_actions([lambda: game_proc.kill()])
     com = Communicator(args.port)
     env = GameEnv(com, total_time=EPISODE_LENGTH)
     random.seed(2)
