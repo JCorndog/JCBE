@@ -22704,7 +22704,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3579455170348621860, guid: 6930c79b5c5a20f41969871fd00af842, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 10.039734
+      value: 10.039749
       objectReference: {fileID: 0}
     - target: {fileID: 3579455170348621860, guid: 6930c79b5c5a20f41969871fd00af842, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -29387,5 +29387,9 @@ PrefabInstance:
       propertyPath: m_Name
       value: Evader
       objectReference: {fileID: 0}
+    - target: {fileID: 8641544453558436238, guid: 91fb1663f7898b245b6e6dc2b895cfb8, type: 3}
+      propertyPath: otherSprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 138af64264c47ee44b7ed277b0b2427d, type: 3}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 91fb1663f7898b245b6e6dc2b895cfb8, type: 3}
