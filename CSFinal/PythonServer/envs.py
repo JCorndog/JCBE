@@ -24,7 +24,7 @@ class Space:
 class GameEnv:
     DEFAULT_MESSAGE_FORMAT = [('touched', 4, int), ('height', 4, int), ('width', 4, int), ('image', -1, np.float32)]  # TODO needs updated if used in the future
     TOUCH_ENEMY_REWARD = 25
-    TOUCH_WALL_REWARD = -5
+    TOUCH_WALL_REWARD = 5
     MOVE_PENALTY = 1
 
     def __init__(self, communicator: Communicator, message_format=None, total_time = 9) -> None:
