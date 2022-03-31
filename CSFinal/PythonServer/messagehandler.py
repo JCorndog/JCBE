@@ -68,7 +68,7 @@ class MessageHandler(threading.Thread):
         msg = None
         while not msg:
             try:
-                msg = self.incoming_message_queue.get(block=True, timeout=.1)
+                msg = self.incoming_message_queue.get(block=True, timeout=.01)
             except queue.Empty:
                 pass
         self.mode = SendMode.SENDING
