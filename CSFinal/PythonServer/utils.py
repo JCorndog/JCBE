@@ -3,15 +3,14 @@ from typing import Dict, Tuple, Optional, List
 import argparse
 import yaml
 import re
-import signal
+import atexit
 
 
 def set_shutdown_actions(funcs: List) -> None:
-    def handler(signum, frame):
+    def handler():
         for func in funcs:
             func()
-
-    signal.signal(signal.SIGINT, handler)
+    atexit.register(handler)
 
 
 def get_args() -> argparse.Namespace:
