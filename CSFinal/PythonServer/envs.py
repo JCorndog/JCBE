@@ -24,10 +24,10 @@ class Space:
 class GameEnv:
     DEFAULT_MESSAGE_FORMAT = [('touched', 4, int), ('height', 4, int), ('width', 4, int), ('image', -1, np.float32)]  # TODO needs updated if used in the future
     TOUCH_ENEMY_REWARD = 25
-    TOUCH_WALL_REWARD = 5
+    TOUCH_WALL_REWARD = 10
     MOVE_PENALTY = 1
 
-    def __init__(self, communicator: Communicator, message_format=None, total_time = 9) -> None:
+    def __init__(self, communicator: Communicator, message_format=None, total_time=9) -> None:
         self.action_space = Space()
         self.communicator = communicator
         communicator.get_data()
@@ -72,6 +72,17 @@ class GameEnv:
         array_received = np.rot90(array_received)
         return array_received, touch_enemy, touch_wall, distance, movement
 
+    def tstep(self, action: int, random_move: bool = False):
+        selected_action = self.action_space.space[action]
+        random_move = b'1' if random_move else b'0'
+        self.communicator.send_data(self.get_epoch_as_bytes() + self.encode_action(selected_action) + random_move)
+        observation, touch_enemy, touch_wall, distance, movement = self.decode_data(self.communicator.get_data())
+        if touch_enemy == 1:
+            done = True
+        else:
+            done = False
+        return (observation, movement), done
+
     def step(self, action: int, random_move: bool) -> Tuple[Tuple[np.ndarray, np.ndarray], int, bool]:
         selected_action = self.action_space.space[action]
         random_move = b'1' if random_move else b'0'
@@ -84,7 +95,7 @@ class GameEnv:
             reward = self.TOUCH_ENEMY_REWARD
 
         elif distance < self.distance:
-            reward = -self.MOVE_PENALTY * 3/4
+            reward = -self.MOVE_PENALTY * 1 / 4
             if time.perf_counter() - self.episode_start > self.total_time:
                 done = True
                 self.ep = 0
