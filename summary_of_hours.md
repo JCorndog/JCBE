@@ -1,29 +1,31 @@
 # Summary of Hours
-
-Semester Summary:
-
 **Jack: Fall Semester Hours**
 ```
-
-Planning 12 12
-Documentation 20 18
-Research 11 9
-Discussion 6 6
-Prototyping 5 7
-Total 52 hours
+Planning: 12
+Documentation: 20
+Research: 11
+Discussion: 6
+Prototyping: 5
+Total: 52 hours
 ```
 
 __Ben: Fall Semester Hours__
 ```
-Planning 12
-Documentation 18
-Research 9
-Discussion 6
-Prototyping 7
-Total 52 hours
+Planning: 12
+Documentation: 18
+Research: 9
+Discussion: 6
+Prototyping: 7
+Total: 52 hours
 ```
 
-Summary of hours
-Jack
-Planning and research - 
-Ben
+**Jack: Spring Semester Hours**
+```
+Planning: 8
+Unity Research: 20
+Unity Development: 30
+Art: 5
+Training Neural Network: 100
+UI Design and Implementation: 6
+Total: 169 hours
+```
