@@ -1,5 +1,17 @@
 # tag.AI
 
+## CS5002 Final Design Report
+1. Project Description
+2. User Interface Specification
+3. Test Plan
+4. User Manual
+5. Final PPT Presentation
+6. Final Expo Poster
+7. Initial and Final Assessments
+8. Summary of Hours
+
+Documentation
+
 1. [Team names](Project-Description.md) and [Abstract](abstract.md)
 2. [Project Description](Project-Description.md)
 3. [User Stories](User_Stories.md) and [Design Diagrams](Design_Diagrams/DesignDiagrams.md)
