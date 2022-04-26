@@ -2,9 +2,9 @@
 
 Semester Summary:
 
-
+**Jack: Fall Semester Hours**
 ```
-__Jack: Fall Semester Hours__
+
 Planning 12 12
 Documentation 20 18
 Research 11 9
@@ -13,8 +13,8 @@ Prototyping 5 7
 Total 52 hours
 ```
 
-```
 __Ben: Fall Semester Hours__
+```
 Planning 12
 Documentation 18
 Research 9
