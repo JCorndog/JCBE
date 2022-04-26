@@ -4,11 +4,11 @@
 1. [Project Description](Project-Description.md)
 2. [User Interface Specification]()
 3. [Test Plan](TestPlan.pdf)
-4. [User Manual]()
+4. [User Manual](User%20Manuel.md)
 5. [Final PPT Presentation](Expo%20Prez.pptx)
 6. [Final Expo Poster](JBCE_Expo_Poster_DRAFTQR.pub)
-7. [Initial and Final Assessments]()
-8. [Summary of Hours]()
+7. [Initial](writing_assignments/assignment3/) and [Final](writing_assignments/final_self_assessment/) Assessments
+8. [Summary of Hours](summary_of_hours.md)
 
 Extra Documentation
 
