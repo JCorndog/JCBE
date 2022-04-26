@@ -10,7 +10,7 @@
 7. [Initial and Final Assessments]()
 8. [Summary of Hours]()
 
-Documentation
+Extra Documentation
 
 1. [Team names](Project-Description.md) and [Abstract](abstract.md)
 2. [Project Description](Project-Description.md)
