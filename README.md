@@ -2,7 +2,7 @@
 
 ## CS5002 Final Design Report
 1. [Project Description](Project-Description.md)
-2. [User Interface Specification]()
+2. [User Interface Specification](docs/images/)
 3. [Test Plan](TestPlan.pdf)
 4. [User Manual](User%20Manuel.md)
 5. [Final PPT Presentation](Expo%20Prez.pptx)
