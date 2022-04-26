@@ -1,9 +1,10 @@
 # Summary of Hours
 
 Semester Summary:
-Jack:
+
 
 ```
+__Jack: Fall Semester Hours__
 Planning 12 12
 Documentation 20 18
 Research 11 9
@@ -13,7 +14,7 @@ Total 52 hours
 ```
 
 ```
-Ben:
+__Ben: Fall Semester Hours__
 Planning 12
 Documentation 18
 Research 9
