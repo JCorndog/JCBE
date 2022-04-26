@@ -37,7 +37,7 @@ Neural Network Implementation: 25
 Training Neural Network: 100
 Total: 155 hours
 ```
-**Project Total: 428 hours
+**Project Total: 428 hours**
 
 For Jack, a large portion of his work was focused on developing the application in Unity that the neural network would train on. Most of his time spent in the fall dealt with preparing our team for the actual development/coding which is why so much time was spent with research and documentation. For the spring semester, Unity was the main body of work and it required him to learn Unity from the ground up. After learning of how to generally leverage what Unity had to offer, the other part of the work was connecting his work with the Neural Network that Ben was developing.
 
